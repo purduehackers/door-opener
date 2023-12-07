@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes background-scroll {
+    0% {
+        background-position: 1000px 0px;
+    }
+    
+    100% {
+        background-position: 0px 500px;
+    }
+}
+
+@keyframes safe-spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes badge-accept {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    50% {
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        top: -150%;
+        transform: translate(-50%, -50%) rotate(40deg);
+    }
+}
+
+@keyframes badge-reject {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    50% {
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        top: 135vh;
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+}
