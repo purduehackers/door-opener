@@ -34,10 +34,12 @@ async fn gui_main(nfc_messages: Receiver::<i32>) {
 
     loop {
         let next_message = nfc_messages.try_recv();
-
-        if next_message.is_ok() {
-            current_nfc_status = next_message.unwrap();
-        }
+        match next_message {
+            Ok(x) => { current_nfc_status = x; },
+            Err(e) => {
+                // probably display the error message somehow
+            }
+        };
 
         clear_background(Color::from_hex(0x0a0a0a));
 
