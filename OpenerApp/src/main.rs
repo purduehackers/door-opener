@@ -8,10 +8,12 @@ fn main() {
     let (nfc_tx, gui_rx) = channel::<i32>();
 
     thread::spawn(|| {
-        gui_entry(gui_rx);
+        nfc_thread(nfc_tx);
     });
 
-    nfc_thread(nfc_tx);
+    gui_entry(gui_rx);
+
+
 }
 
 fn nfc_thread(gui_sender: Sender::<i32>) {
