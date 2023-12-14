@@ -33,10 +33,10 @@ async fn gui_main(nfc_messages: Receiver::<i32>) {
     let passport_data = passport::initialise_passport().await;
 
     loop {
-        let next_message = nfc_messages.try_recv();
-        match next_message {
+        match nfc_messages.try_recv() {
             Ok(x) => { current_nfc_status = x; },
-            Err(e) => {
+            Err(std::sync::mpsc::TryRecvError::Empty) => (),
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                 // probably display the error message somehow
             }
         };
