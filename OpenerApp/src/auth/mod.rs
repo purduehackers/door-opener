@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use crate::{hardware::door::DoorOpener, config::NFC_SERIAL};
+use crate::{hardware::door::{DoorOpener, self}, config::NFC_SERIAL};
 
 pub fn auth_entry(gui_sender: Sender<i32>) {
     let door_opener: DoorOpener = DoorOpener::new();
@@ -28,21 +28,32 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
                 let _ = gui_sender.send(1);
 
                 if let nfc1::target_info::TargetInfo::Iso14443a(target_info) = target.target_info {
-                    //println!("Found ISO/IEC 14443-A target: {}", HexFmt(&target_info.uid[..target_info.uid_len]));
-                    
                     let _ = device.set_property_bool(nfc1::Property::EasyFraming, true);
 
-                    let test = device.initiator_transceive_bytes_timed([0x30, 0x00].as_mut_ptr(), 2).unwrap();
+                    match device.initiator_transceive_bytes([0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], 16, nfc1::Timeout::Default) {
+                        Ok(data) => {
+                            println!("mifare data: {:?}", data);
 
-                    println!("mifare data: {:?}", test);
+                            let verified = true;
 
-                    let verified = true;
+                            let _ = gui_sender.send(if verified {2} else {3});
 
-                    let _ = gui_sender.send(if verified {2} else {3});
+                            if verified {
+                                door_opener.open();
+                            }
 
-                    thread::sleep(Duration::from_millis(5000));
+                            thread::sleep(Duration::from_millis(5000));
 
-                    let _ = gui_sender.send(0);
+                            let _ = gui_sender.send(0);
+                        }
+                        Err(_) => {
+                            let _ = gui_sender.send(3);
+
+                            thread::sleep(Duration::from_millis(5000));
+
+                            let _ = gui_sender.send(0);
+                        }
+                    }
                 }
             }
             Err(_) => {}
