@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use crate::hardware::door::DoorOpener;
+use crate::{hardware::door::DoorOpener, config::NFC_SERIAL};
 
 pub fn auth_entry(gui_sender: Sender<i32>) {
     let door_opener: DoorOpener = DoorOpener::new();
@@ -14,7 +14,7 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
     // let mut next_iter_resets = false;
 
     let mut context = nfc1::Context::new().unwrap();
-    let mut device = context.open().unwrap();
+    let mut device = context.open_with_connstring(NFC_SERIAL).unwrap();
 
     let _ = device.initiator_init();
     let _ = device.set_property_bool(nfc1::Property::InfiniteSelect, true);
