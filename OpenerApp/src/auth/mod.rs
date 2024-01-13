@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use crate::{hardware::door::{DoorOpener, self}, config::NFC_SERIAL};
+use crate::hardware::door::{DoorOpener, self};
 
 pub fn auth_entry(gui_sender: Sender<i32>) {
     let door_opener: DoorOpener = DoorOpener::new();
@@ -30,7 +30,7 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
                 if let nfc1::target_info::TargetInfo::Iso14443a(target_info) = target.target_info {
                     let _ = device.set_property_bool(nfc1::Property::EasyFraming, true);
 
-                    match device.initiator_transceive_bytes([0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], 16, nfc1::Timeout::Default) {
+                    match device.initiator_transceive_bytes(&[0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], 16, nfc1::Timeout::Default) {
                         Ok(data) => {
                             println!("mifare data: {:?}", data);
 
