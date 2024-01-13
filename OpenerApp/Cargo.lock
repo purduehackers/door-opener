@@ -142,15 +142,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cmake"
-version = "0.1.50"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31c789563b815f77f4250caee12365734369f942439b7defd71e18a48197130"
-dependencies = [
- "cc",
-]
-
-[[package]]
 name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -385,18 +376,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libusb1-sys"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e22e89d08bbe6816c6c5d446203b859eba35b8fa94bf1b7edb2f6d25d43f023f"
-dependencies = [
- "cc",
- "libc",
- "pkg-config",
- "vcpkg",
-]
-
-[[package]]
 name = "linux-raw-sys"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -522,11 +501,8 @@ checksum = "06372021f6b5d976a0bd28f200c60e2cd2d98d17a377c8c9eaeef5378dca8ff2"
 dependencies = [
  "bindgen",
  "cc",
- "cmake",
  "find-winsdk",
- "libusb1-sys",
  "pkg-config",
- "usb-compat-01-sys",
  "vcpkg",
 ]
 
@@ -1013,18 +989,6 @@ name = "unicode-vo"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1d386ff53b415b7fe27b50bb44679e2cc4660272694b7b6f3326d8480823a94"
-
-[[package]]
-name = "usb-compat-01-sys"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74df4fc8ddd1f64c0d908327b85882afa08e747b5dbcfd3d0065e4abee91374b"
-dependencies = [
- "bindgen",
- "cc",
- "libusb1-sys",
- "pkg-config",
-]
 
 [[package]]
 name = "usvg"

@@ -9,4 +9,5 @@ edition = "2021"
 macroquad = "0.4.4"
 resvg = "0.28.0"
 serialport = "4.3.0"
-nfc1 = "0.5.2"
+nfc1 = { version = "0.5.2", default-features=false, features = [ ] }
+# nfc1 = "0.5.2"
