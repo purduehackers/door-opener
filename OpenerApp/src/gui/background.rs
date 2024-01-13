@@ -1,10 +1,13 @@
-use macroquad::{prelude::*, miniquad::{BlendState, Equation, BlendFactor, BlendValue}};
+use macroquad::{
+    miniquad::{BlendFactor, BlendState, BlendValue, Equation},
+    prelude::*,
+};
 
 const PH_LOGO_TILABLE: &[u8] = include_bytes!("./ph-logo-tilable.png");
 
 pub struct BackgroundData {
     material: Material,
-    logo_texture: Texture2D
+    logo_texture: Texture2D,
 }
 
 pub async fn initialise_background() -> BackgroundData {
@@ -22,14 +25,10 @@ pub async fn initialise_background() -> BackgroundData {
                     BlendFactor::Value(BlendValue::SourceAlpha),
                     BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
                 )),
-                ..Default::default()  
+                ..Default::default()
             },
-            uniforms: vec![
-                ("time".to_owned(), UniformType::Float1)
-            ],
-            textures: vec![
-                "logo_texture".to_string()
-            ],
+            uniforms: vec![("time".to_owned(), UniformType::Float1)],
+            textures: vec!["logo_texture".to_string()],
             ..Default::default()
         },
     )
@@ -37,13 +36,17 @@ pub async fn initialise_background() -> BackgroundData {
 
     return BackgroundData {
         material: background_material,
-        logo_texture: logo_texture
+        logo_texture: logo_texture,
     };
 }
 
 pub fn draw_background(background_data: &BackgroundData) {
-    background_data.material.set_uniform("time", (get_time() % 6.0) as f32);
-    background_data.material.set_texture("logo_texture", background_data.logo_texture.to_owned());
+    background_data
+        .material
+        .set_uniform("time", (get_time() % 6.0) as f32);
+    background_data
+        .material
+        .set_texture("logo_texture", background_data.logo_texture.to_owned());
 
     gl_use_material(&background_data.material);
     draw_rectangle(0.0, 0.0, 720.0, 720.0, WHITE);

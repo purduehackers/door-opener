@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 macroquad = "0.4.4"
 resvg = "0.28.0"
+serialport = "4.3.0"
+nfc1 = "0.5.2"
