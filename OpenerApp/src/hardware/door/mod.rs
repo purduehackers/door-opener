@@ -1,5 +1,7 @@
+mod lx16a;
+
 use std::{
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::mpsc::{channel, Sender},
     thread, time,
 };
 
@@ -9,8 +11,6 @@ use crate::config::{
 
 use self::lx16a::ServoController;
 
-mod lx16a;
-
 pub struct DoorOpener {
     tx: Sender<i32>,
 }
@@ -18,17 +18,17 @@ pub struct DoorOpener {
 impl DoorOpener {
     pub fn new() -> DoorOpener {
         let (tx, rx) = channel::<i32>();
-        //let mut servo_controller = ServoController::new(DOOR_SERVO_SERIAL.to_string());
+        let mut servo_controller = ServoController::new(DOOR_SERVO_SERIAL.to_string());
 
         thread::spawn(move || {
             loop {
                 match rx.try_recv() {
                     Ok(_x) => {
-                        //servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, 0);
+                        servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, 0);
 
                         thread::sleep(time::Duration::from_millis(1000));
 
-                        //servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_RELEASED_POSITION, 0);
+                        servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_RELEASED_POSITION, 0);
                     }
                     Err(std::sync::mpsc::TryRecvError::Empty) => (),
                     Err(std::sync::mpsc::TryRecvError::Disconnected) => {
@@ -38,7 +38,7 @@ impl DoorOpener {
             }
         });
 
-        return DoorOpener { tx: tx };
+        return Self { tx };
     }
 
     pub fn open(&self) {

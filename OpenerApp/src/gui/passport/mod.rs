@@ -251,8 +251,8 @@ void main() {
 
     float smoothedAlpha = 1.0 - smoothstep(0.0, 2.0, distance);
 
-    vec4 quadColor = mix(vec4(texture2D(_ScreenTexture, screen_position).rgb, 0.0), vec4(mixed_colour.rgb, smoothedAlpha), smoothedAlpha);
+    vec4 quadColour = mix(vec4(texture2D(_ScreenTexture, screen_position).rgb, 0.0), vec4(mixed_colour.rgb, smoothedAlpha), smoothedAlpha);
     
-    gl_FragColor = quadColor;
+    gl_FragColor = quadColour;
 }
 ";
