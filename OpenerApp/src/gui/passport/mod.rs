@@ -5,9 +5,9 @@ use macroquad::{
 
 use super::svg;
 
-const NOISE_SVG: &[u8] = include_bytes!("../noise.svg");
-const PASSPORT_EMBLEM: &[u8] = include_bytes!("../passport-emblem.svg");
-const LOADING_SPINNER: &[u8] = include_bytes!("../loading-spinner.svg");
+const NOISE_SVG: &[u8] = include_bytes!("../assets/noise.svg");
+const PASSPORT_EMBLEM: &[u8] = include_bytes!("../assets/passport-emblem.svg");
+const LOADING_SPINNER: &[u8] = include_bytes!("../assets/loading-spinner.svg");
 
 pub struct PassportData {
     material: Material,
@@ -18,6 +18,10 @@ pub struct PassportData {
     current_spinner_cutout_opacity: f32,
     current_x: f32,
     current_y: f32,
+    last_state: i32,
+    current_animation_time: f32,
+    last_final_x: f32,
+    last_final_y: f32
 }
 
 pub async fn initialise_passport() -> PassportData {
@@ -64,6 +68,10 @@ pub async fn initialise_passport() -> PassportData {
         current_spinner_cutout_opacity: 0.0,
         current_x: 0.0,
         current_y: 0.0,
+        last_state: 0,
+        current_animation_time: 0.0,
+        last_final_x: 0.0,
+        last_final_y: 0.0
     };
 }
 
@@ -81,23 +89,43 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
     let delta_time: f32 = get_frame_time();
     let loading_spinner_angle = (get_time() * 3.0) as f32;
 
-    if state == 0 {
-        passport_data.current_x = x;
-        passport_data.current_y = y;
-    } else {
-        let animation_speed = match state {
-            0 => 5.0,
-            1 => 5.0,
-            2 => 2.0,
-            3 => 5.0,
-            _default => 5.0,
-        };
-
-        passport_data.current_x =
-            super::float32_lerp(passport_data.current_x, x, delta_time * animation_speed);
-        passport_data.current_y =
-            super::float32_lerp(passport_data.current_y, y, delta_time * animation_speed);
+    if state != passport_data.last_state {
+        passport_data.last_state = state;
+        passport_data.current_animation_time = 0.0;
+        passport_data.last_final_x = passport_data.current_x;
+        passport_data.last_final_y = passport_data.current_y;
     }
+
+    match state {
+        0 => {
+            passport_data.current_x = x;
+            passport_data.current_y = y;
+        },
+        1 => {
+            let linear_x = f32::clamp(passport_data.current_animation_time, 0.0, 1.0);
+            let curved_x: f32 = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
+    
+            passport_data.current_x =
+                super::float32_lerp(passport_data.last_final_x, x, curved_x);
+            passport_data.current_y =
+                super::float32_lerp(passport_data.last_final_y, y, curved_x);
+        },
+        _default => {
+            let linear_x = passport_data.current_animation_time - 1.0;
+            let mut curved_x: f32 = 0.0; 
+            
+            if linear_x >= 0.0 {
+                curved_x = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
+            }
+
+            passport_data.current_x =
+                super::float32_lerp(passport_data.last_final_x, x, curved_x);
+            passport_data.current_y =
+                super::float32_lerp(passport_data.last_final_y, y, curved_x);
+        }
+    }
+
+    passport_data.current_animation_time = f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
 
     gl_use_material(&passport_data.material);
     draw_rectangle(
@@ -108,9 +136,6 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
         WHITE,
     );
     gl_use_default_material();
-
-    let center_x = passport_data.current_x - (passport_data.logo_texture.width() / 2.0);
-    let center_y = passport_data.current_y - (passport_data.logo_texture.height() / 2.0);
 
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
         passport_data.current_spinner_cutout_opacity,
@@ -135,17 +160,23 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
         delta_time * 10.0,
     );
 
+    let logo_center_x = passport_data.current_x - (passport_data.logo_texture.width() / 2.0);
+    let logo_center_y = passport_data.current_y - (passport_data.logo_texture.height() / 2.0);
+
     draw_texture(
         &passport_data.logo_texture,
-        center_x,
-        center_y,
+        logo_center_x,
+        logo_center_y,
         Color::from_hex(0xfbcb3b),
     );
+    
+    let spinner_center_x = passport_data.current_x - (passport_data.loading_spinner_texture.width() / 2.0);
+    let spinner_center_y = passport_data.current_y - (passport_data.loading_spinner_texture.height() / 2.0);
 
     draw_texture_ex(
         &passport_data.loading_spinner_texture,
-        center_x,
-        center_y,
+        spinner_center_x,
+        spinner_center_y,
         Color {
             r: passport_data.current_spinner_colour.r,
             g: passport_data.current_spinner_colour.g,
@@ -164,8 +195,8 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
 
     draw_texture_ex(
         &passport_data.loading_spinner_texture,
-        center_x,
-        center_y,
+        spinner_center_x,
+        spinner_center_y,
         passport_data.current_spinner_colour,
         DrawTextureParams {
             dest_size: Option::None,
@@ -219,13 +250,14 @@ float rounded_box_signed_distance_factor(vec2 CenterPosition, vec2 Size, float R
     return length(max(abs(CenterPosition)-Size+Radius,0.0))-Radius;
 }
 
+// This shader is fucked, need to reimplement it later lmao
 void main() {
-    const int mSize = 52;
+    const int mSize = 152; //52
 	const int kSize = (mSize - 1) / 2;
 	float kernel[mSize];
 	vec3 final_colour = vec3(0.0);
 	
-	float sigma = 14.0;
+	float sigma = 20.0;
 	float Z = 0.0;
 	for (int j = 0; j <= kSize; ++j)
 	{
@@ -245,14 +277,20 @@ void main() {
         }
 	}
 
-	vec4 mixed_colour = vec4(final_colour / (Z * Z), 1.0) + (texture2D(noise_texture, uv) * 0.15 - 0.05);
+	vec4 mixed_colour = vec4(final_colour / (Z * Z), 1.0) + (texture2D(noise_texture, uv) * 0.15 - 0.10);
 
-    float distance = rounded_box_signed_distance_factor((uv * vec2(332.0, 472.0)) - (vec2(332.0, 472.0) / 2.0), vec2(332.0, 472.0) / 2.0, RADIUS);
+    float bc_distance = rounded_box_signed_distance_factor((uv * vec2(332.0, 472.0)) - (vec2(332.0, 472.0) / 2.0), vec2(332.0, 472.0) / 2.0, RADIUS);
 
-    float smoothedAlpha = 1.0 - smoothstep(0.0, 2.0, distance);
+    float bc_smoothed_alpha = 1.0 - smoothstep(0.0, 2.0, bc_distance);
 
-    vec4 quadColour = mix(vec4(texture2D(_ScreenTexture, screen_position).rgb, 0.0), vec4(mixed_colour.rgb, smoothedAlpha), smoothedAlpha);
+    vec4 bc_quad_colour = mix(vec4(texture2D(_ScreenTexture, screen_position).rgb, 0.0), vec4(0.984313725490196, 0.796078431372549, 0.23137254901960785, bc_smoothed_alpha), bc_smoothed_alpha);
+
+    float distance = rounded_box_signed_distance_factor((uv * vec2(332.0, 472.0)) - (vec2(332.0, 472.0) / 2.0), vec2(326.0, 466.0) / 2.0, RADIUS - 4.0);
+
+    float smoothed_alpha = 1.0 - smoothstep(0.0, 2.0, distance);
+
+    vec4 quad_colour = mix(bc_quad_colour, vec4(mixed_colour.rgb, smoothed_alpha), smoothed_alpha);
     
-    gl_FragColor = quadColour;
+    gl_FragColor = quad_colour;
 }
 ";

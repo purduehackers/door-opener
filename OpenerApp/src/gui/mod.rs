@@ -1,15 +1,18 @@
 pub mod background;
 pub mod passport;
 pub mod svg;
+pub mod font_engine;
 
 use std::sync::mpsc::Receiver;
 
 use macroquad::prelude::*;
 
-use self::passport::draw_passport;
+use self::{passport::draw_passport, font_engine::draw_text};
 use crate::timedvariable::TimedVariable;
 
-const SEGOE_UI_FONT: &[u8] = include_bytes!("./SegoeUI.ttf");
+const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
+const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
+const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
 
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
     return source * (1.0 - percent) + destination * percent;
@@ -39,13 +42,22 @@ pub fn gui_entry(nfc_messages: Receiver<i32>) {
 }
 
 async fn gui_main(nfc_messages: Receiver<i32>) {
+    let mut led_controller = LEDController::new();
+
     let mut queued_auth_state: (i32, bool) = (-1, false);
     let mut animating_auth_state: TimedVariable<(i32, bool)> = TimedVariable::new((-1, false));
     let mut auth_state: TimedVariable<i32> = TimedVariable::new(0);
     let mut show_welcome: TimedVariable<bool> = TimedVariable::new(true);
     let mut active_message: TimedVariable<i32> = TimedVariable::new(0);
 
+    let mut welcome_opacity: f32 = 255.0;
+    let mut accepted_opacity: f32 = 0.0;
+    let mut rejected_opacity: f32 = 0.0;
+
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
+
+    let doorbell_qr: Texture2D = Texture2D::from_file_with_format(DOORBELL_QR, None);
+    let doorbell_qr_pointer = svg::svg_to_texture(String::from_utf8(DOORBELL_QR_POINTER.to_vec()).unwrap().as_str());
 
     let background_data = background::initialise_background().await;
 
@@ -63,9 +75,7 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
 
             if animating_auth_state.get().0 > -1 {
-                //invoke('set_led_effect', { number: animating_auth_state });
-
-                println!("ooooooooooooooo animat {}", animating_auth_state.get().0);
+                led_controller.set_colour(animating_auth_state.get().0);
 
                 match animating_auth_state.get().0 {
                     0 => {
@@ -104,14 +114,11 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
 
         if animating_auth_state.get().1 || queued_auth_state.1 {
             // i think i fixed it // if animations progress too fast, this is probably the problem lmao
-            println!("the queue has been updated {}", queued_auth_state.0);
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
             queued_auth_state.1 = false;
 
             if (animating_auth_state.get().0 < 0) && (queued_auth_state.0 >= 0) {
                 animating_auth_state.set((queued_auth_state.0, true), -1.0);
-                println!("we're updating to {:?}", queued_auth_state);
-                println!("we really at {:?}", animating_auth_state);
 
                 queued_auth_state = (-1, false);
             }
@@ -119,7 +126,6 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
 
         match nfc_messages.try_recv() {
             Ok(x) => {
-                println!("we did a thing {}", x);
                 queued_auth_state = (x, true);
             }
             Err(std::sync::mpsc::TryRecvError::Empty) => (),
@@ -128,17 +134,19 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
             }
         };
 
+        let delta_time: f32 = get_frame_time();
+
         clear_background(Color::from_hex(0x0a0a0a));
 
         background::draw_background(&background_data);
 
-        draw_text_window(
-            "Welcome to\nHack Night",
-            "Scan your passport to\nstart",
-            false,
-            1.0,
-            &segoe_ui,
-        );
+        welcome_opacity = f32::clamp(welcome_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 0) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
+        accepted_opacity = f32::clamp(accepted_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 1) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
+        rejected_opacity = f32::clamp(rejected_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 2) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
+
+        draw_welcome_window(welcome_opacity as u8, &segoe_ui, &doorbell_qr, &doorbell_qr_pointer);
+        draw_accepted_window(accepted_opacity as u8, &segoe_ui);
+        draw_rejected_window(rejected_opacity as u8, &segoe_ui, &doorbell_qr);
 
         draw_passport(
             360.0,
@@ -157,27 +165,136 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
     }
 }
 
-fn draw_text_window(title: &str, description: &str, _show_qr: bool, _opacity: f32, font: &Font) {
-    draw_text_ex(
-        title,
-        20.0,
-        200.0,
-        TextParams {
-            font_size: 96,
-            color: Color::from_hex(0xfbcb3b),
-            font: Some(&font),
-            ..Default::default()
+fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbell_qr_pointer: &Texture2D) {
+    draw_rectangle(0.0, 164.0, 720.0, 392.0, Color::from_rgba(10, 10, 10, opacity));
+    draw_rectangle(0.0, 164.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(0.0, 552.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+
+    let _ = draw_text(
+        "Welcome to Hack Night",
+        32.0,
+        203.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        96,
+        1.0
+    );
+    let _ = draw_text(
+        "Scan your passport to start",
+        32.0,
+        422.0,
+        500.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        48,
+        1.0
+    );
+
+    draw_texture_ex(
+        doorbell_qr,
+        580.0,
+        422.0,
+        Color::from_rgba(255, 255, 255, opacity),
+        DrawTextureParams {
+            dest_size: Some(Vec2 {
+                x: 96.0,
+                y: 96.0
+            }),
+            source: Option::None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: Option::None,
         },
     );
-    draw_text_ex(
-        description,
-        20.0,
-        300.0,
-        TextParams {
-            font_size: 48,
-            color: Color::from_hex(0xfbcb3b),
-            font: Some(&font),
-            ..Default::default()
+    draw_texture_ex(
+        doorbell_qr_pointer,
+        540.0,
+        358.0,
+        Color::from_rgba(255, 255, 255, opacity),
+        DrawTextureParams {
+            dest_size: Some(Vec2 {
+                x: 160.0,
+                y: 64.0
+            }),
+            source: Option::None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: Option::None,
+        },
+    );
+}
+
+fn draw_accepted_window(opacity: u8, font: &Font) {
+    draw_rectangle(0.0, 212.0, 720.0, 296.0, Color::from_rgba(10, 10, 10, opacity));
+    draw_rectangle(0.0, 212.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(0.0, 504.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+
+    let _ = draw_text(
+        "Welcome back!",
+        32.0,
+        251.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        96,
+        1.0
+    );
+    let _ = draw_text(
+        "Please be mindful of the door opening",
+        32.0,
+        374.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        48,
+        1.0
+    );
+}
+
+fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
+    draw_rectangle(0.0, 140.0, 720.0, 440.0, Color::from_rgba(10, 10, 10, opacity));
+    draw_rectangle(0.0, 140.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(0.0, 576.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+
+    let _ = draw_text(
+        "Invalid Passport!",
+        32.0,
+        179.0,
+        420.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        96,
+        1.0
+    );
+    let _ = draw_text(
+        "Please try again or scan the QR code to ring the doorbell manually!",
+        32.0,
+        398.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        48,
+        1.0
+    );
+
+    draw_texture_ex(
+        doorbell_qr,
+        500.0,
+        179.0,
+        Color::from_rgba(255, 255, 255, opacity),
+        DrawTextureParams {
+            dest_size: Some(Vec2 {
+                x: 192.0,
+                y: 192.0
+            }),
+            source: Option::None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: Option::None,
         },
     );
 }
