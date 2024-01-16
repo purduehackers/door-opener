@@ -3,7 +3,7 @@ use macroquad::{
     prelude::*,
 };
 
-const PH_LOGO_TILABLE: &[u8] = include_bytes!("./ph-logo-tilable.png");
+const PH_LOGO_TILABLE: &[u8] = include_bytes!("./assets/ph-logo-tilable.png");
 
 pub struct BackgroundData {
     material: Material,

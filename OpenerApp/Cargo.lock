@@ -579,6 +579,7 @@ dependencies = [
  "macroquad",
  "nfc1",
  "resvg",
+ "rs_ws281x",
  "serialport",
 ]
 
@@ -725,6 +726,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "862340e351ce1b271a378ec53f304a5558f7db87f3769dc655a8f6ecbb68b302"
 dependencies = [
  "xmlparser",
+]
+
+[[package]]
+name = "rs_ws281x"
+version = "0.5.1"
+source = "git+https://github.com/FizzyApple12/rpi-ws281x-rust.git#ec1b714b22b04296eb1c909c6fdf988b6eb24eee"
+dependencies = [
+ "bindgen",
+ "cc",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
