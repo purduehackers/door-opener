@@ -4,7 +4,7 @@ pub mod gui;
 pub mod hardware;
 pub mod timedvariable;
 
-use std::{sync::mpsc::{channel, Sender}, thread, time};
+use std::{sync::mpsc::channel, thread};
 
 use auth::auth_entry;
 

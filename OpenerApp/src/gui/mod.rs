@@ -10,6 +10,8 @@ use macroquad::prelude::*;
 use self::{passport::draw_passport, font_engine::draw_text};
 use crate::timedvariable::TimedVariable;
 
+use crate::hardware::led::LEDController;
+
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
