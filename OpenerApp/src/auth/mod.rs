@@ -21,6 +21,8 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
 
                         let verified = true;
 
+                        thread::sleep(Duration::from_millis(1500));
+
                         let _ = gui_sender.send(if verified {2} else {3});
                         
                         if verified {
@@ -28,6 +30,8 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
                         }
                     }
                     Err(_) => {
+                        thread::sleep(Duration::from_millis(1500));
+
                         let _ = gui_sender.send(3);
                     }
                 }
