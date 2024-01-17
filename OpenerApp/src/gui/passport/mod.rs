@@ -127,15 +127,22 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
 
     passport_data.current_animation_time = f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
 
-    gl_use_material(&passport_data.material);
+    //gl_use_material(&passport_data.material);
     draw_rectangle(
         passport_data.current_x - 166.0,
         passport_data.current_y - 236.0,
         332.0,
         472.0,
-        WHITE,
+        Color::from_hex(0xfbcb3b),
     );
-    gl_use_default_material();
+    draw_rectangle(
+        passport_data.current_x - 164.0,
+        passport_data.current_y - 234.0,
+        328.0,
+        468.0,
+        Color::from_rgba(10, 10, 10, 255),
+    );
+    //gl_use_default_material();
 
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
         passport_data.current_spinner_cutout_opacity,
@@ -160,13 +167,10 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
         delta_time * 10.0,
     );
 
-    let logo_center_x = passport_data.current_x - (passport_data.logo_texture.width() / 2.0);
-    let logo_center_y = passport_data.current_y - (passport_data.logo_texture.height() / 2.0);
-
     draw_texture(
         &passport_data.logo_texture,
-        logo_center_x,
-        logo_center_y,
+        passport_data.current_x - (passport_data.logo_texture.width() / 2.0),
+        passport_data.current_y - (passport_data.logo_texture.height() / 2.0),
         Color::from_hex(0xfbcb3b),
     );
     
