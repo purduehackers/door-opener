@@ -36,7 +36,7 @@ pub fn gui_entry(nfc_messages: Receiver<i32>) {
             window_width: 720,
             window_height: 720,
             window_resizable: false,
-            sample_count: 4,
+            sample_count: 0,
             ..Default::default()
         },
         gui_main(nfc_messages),
