@@ -10,7 +10,7 @@ use macroquad::prelude::*;
 use self::{passport::draw_passport, font_engine::draw_text};
 use crate::timedvariable::TimedVariable;
 
-use crate::hardware::led::LEDController;
+// use crate::hardware::led::LEDController;
 
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
@@ -44,7 +44,7 @@ pub fn gui_entry(nfc_messages: Receiver<i32>) {
 }
 
 async fn gui_main(nfc_messages: Receiver<i32>) {
-    let mut led_controller = LEDController::new();
+    // let mut led_controller = LEDController::new();
 
     let mut queued_auth_state: (i32, bool) = (-1, false);
     let mut animating_auth_state: TimedVariable<(i32, bool)> = TimedVariable::new((-1, false));
@@ -77,7 +77,7 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
 
             if animating_auth_state.get().0 > -1 {
-                led_controller.set_colour(animating_auth_state.get().0);
+                // led_controller.set_colour(animating_auth_state.get().0);
 
                 match animating_auth_state.get().0 {
                     0 => {
@@ -162,6 +162,10 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
             auth_state.get(),
             &mut passport_data,
         );
+
+        if is_key_down(KeyCode::Escape) {
+            return;
+        }
 
         next_frame().await
     }
