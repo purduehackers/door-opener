@@ -4,7 +4,7 @@ pub mod gui;
 pub mod hardware;
 pub mod timedvariable;
 
-use std::{sync::mpsc::channel, thread};
+use std::{sync::mpsc::{channel, Sender}, thread, time};
 
 use auth::auth_entry;
 
@@ -13,12 +13,12 @@ use crate::gui::gui_entry;
 fn main() {
     let (auth_tx, gui_rx) = channel::<i32>();
 
-    thread::spawn(|| {
+    // thread::spawn(|| {
         auth_entry(auth_tx);
         // gui_tester_thread(auth_tx);
-    });
+    // });
 
-    gui_entry(gui_rx);
+    // gui_entry(gui_rx);
 }
 
 // fn gui_tester_thread(gui_sender: Sender::<i32>) {

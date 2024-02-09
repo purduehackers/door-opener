@@ -1,8 +1,6 @@
-use std::{
-    sync::mpsc::Sender,
-    thread::{self},
-    time::Duration,
-};
+use std::{string::String, sync::mpsc::Sender, thread, time::Duration};
+
+use reqwest::StatusCode;
 
 use crate::hardware::{door::DoorOpener, nfc::NFCReader};
 
@@ -12,19 +10,19 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
 
     loop {
         match nfc_reader.poll() {
-            Ok(target) => {
+            Ok(_) => {
                 let _ = gui_sender.send(1);
 
-                match nfc_reader.read(target) {
+                match nfc_reader.read() {
                     Ok(data) => {
                         println!("mifare data: {:?}", data);
 
-                        let verified = true;
+                        let verified = check_passport_validity(data.0, data.1);
 
                         thread::sleep(Duration::from_millis(2500));
 
-                        let _ = gui_sender.send(if verified {2} else {3});
-                        
+                        let _ = gui_sender.send(if verified { 2 } else { 3 });
+
                         if verified {
                             door_opener.open();
                         }
@@ -44,5 +42,27 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
         }
 
         thread::sleep(Duration::from_millis(300));
+    }
+}
+
+pub fn check_passport_validity(id: i32, secret: String) -> bool {
+    let client = reqwest::blocking::Client::new();
+    let res = client
+        .get("https://id.purduehackers.com/api/door")
+        .body(format!("{{\"id\": {id}, \"secret\": \"{secret}\"}}"))
+        .send();
+
+    match res {
+        Ok(res) => match res.status() {
+            StatusCode::OK => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
+        },
+        Err(_) => {
+            return false;
+        }
     }
 }

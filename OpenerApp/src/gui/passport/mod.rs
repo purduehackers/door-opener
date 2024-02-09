@@ -1,18 +1,12 @@
-use macroquad::{
-    miniquad::{BlendFactor, BlendState, BlendValue, Equation},
-    prelude::*,
-};
+use macroquad::prelude::*;
 
 use super::svg;
 
-const NOISE_SVG: &[u8] = include_bytes!("../assets/noise.svg");
 const PASSPORT_EMBLEM: &[u8] = include_bytes!("../assets/passport-emblem.svg");
 const LOADING_SPINNER: &[u8] = include_bytes!("../assets/loading-spinner.svg");
 
 pub struct PassportData {
-    material: Material,
     logo_texture: Texture2D,
-    noise_texture: Texture2D,
     loading_spinner_texture: Texture2D,
     current_spinner_colour: Color,
     current_spinner_cutout_opacity: f32,
@@ -30,39 +24,14 @@ pub async fn initialise_passport() -> PassportData {
             .unwrap()
             .as_str(),
     );
-    let noise_texture =
-        svg::svg_to_texture(String::from_utf8(NOISE_SVG.to_vec()).unwrap().as_str());
     let loading_spinner_texture = svg::svg_to_texture(
         String::from_utf8(LOADING_SPINNER.to_vec())
             .unwrap()
             .as_str(),
     );
 
-    let passport_material = load_material(
-        ShaderSource::Glsl {
-            vertex: PASSPORT_VERTEX_SHADER,
-            fragment: PASSPORT_FRAGMENT_SHADER,
-        },
-        MaterialParams {
-            pipeline_params: PipelineParams {
-                color_blend: Some(BlendState::new(
-                    Equation::Add,
-                    BlendFactor::Value(BlendValue::SourceAlpha),
-                    BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
-                )),
-                ..Default::default()
-            },
-            uniforms: vec![("time".to_owned(), UniformType::Float1)],
-            textures: vec!["logo_texture".to_string(), "noise_texture".to_string()],
-            ..Default::default()
-        },
-    )
-    .unwrap();
-
     return PassportData {
-        material: passport_material,
         logo_texture: logo_texture,
-        noise_texture: noise_texture,
         loading_spinner_texture: loading_spinner_texture,
         current_spinner_colour: Color::from_hex(0xfbcb3b),
         current_spinner_cutout_opacity: 0.0,
@@ -76,16 +45,6 @@ pub async fn initialise_passport() -> PassportData {
 }
 
 pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportData) {
-    passport_data
-        .material
-        .set_uniform("time", (get_time() % 6.0) as f32);
-    passport_data
-        .material
-        .set_texture("logo_texture", passport_data.logo_texture.to_owned());
-    passport_data
-        .material
-        .set_texture("noise_texture", passport_data.noise_texture.to_owned());
-
     let delta_time: f32 = get_frame_time();
     let loading_spinner_angle = (get_time() * 3.0) as f32;
 
@@ -127,22 +86,20 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
 
     passport_data.current_animation_time = f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
 
-    //gl_use_material(&passport_data.material);
     draw_rectangle(
-        passport_data.current_x - 166.0,
-        passport_data.current_y - 236.0,
-        332.0,
-        472.0,
+        passport_data.current_x - 360.0,
+        passport_data.current_y - 360.0,
+        720.0,
+        720.0,
         Color::from_hex(0xfbcb3b),
     );
     draw_rectangle(
-        passport_data.current_x - 164.0,
-        passport_data.current_y - 234.0,
-        328.0,
-        468.0,
+        passport_data.current_x - 350.0,
+        passport_data.current_y - 350.0,
+        700.0,
+        700.0,
         Color::from_rgba(10, 10, 10, 255),
     );
-    //gl_use_default_material();
 
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
         passport_data.current_spinner_cutout_opacity,
@@ -212,89 +169,3 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
         },
     );
 }
-
-const PASSPORT_VERTEX_SHADER: &'static str = "#version 100
-attribute vec3 position;
-attribute vec2 texcoord;
-
-varying vec2 uv;
-varying vec2 screen_position;
-
-uniform mat4 Model;
-uniform mat4 Projection;
-
-void main() {
-    uv = texcoord;
-
-    gl_Position = Projection * Model * vec4(position, 1);
-    screen_position = vec2(position.x, 720.0 - position.y);
-}
-";
-
-const PASSPORT_FRAGMENT_SHADER: &'static str = "#version 100
-precision highp float;
-
-varying vec2 uv;
-varying vec2 screen_position;
-
-uniform float time;
-uniform sampler2D logo_texture;
-uniform sampler2D noise_texture;
-
-uniform sampler2D _ScreenTexture;
-
-#define RADIUS 12.0
-
-float normpdf(in float x, in float sigma)
-{
-	return 0.39894*exp(-0.5*x*x/(sigma*sigma))/sigma;
-}
-
-float rounded_box_signed_distance_factor(vec2 CenterPosition, vec2 Size, float Radius) {
-    return length(max(abs(CenterPosition)-Size+Radius,0.0))-Radius;
-}
-
-// This shader is fucked, need to reimplement it later lmao
-void main() {
-    const int mSize = 152; //52
-	const int kSize = (mSize - 1) / 2;
-	float kernel[mSize];
-	vec3 final_colour = vec3(0.0);
-	
-	float sigma = 20.0;
-	float Z = 0.0;
-	for (int j = 0; j <= kSize; ++j)
-	{
-		kernel[kSize + j] = kernel[kSize - j] = normpdf(float(j), sigma);
-	}
-	
-	for (int j = 0; j < mSize; ++j)
-	{
-		Z += kernel[j];
-	}
-	
-	for (int i = -kSize; i <= kSize; i += 2)
-	{
-		for (int j = -kSize; j <= kSize; j += 2)
-		{
-			final_colour += (kernel[kSize + j] * kernel[kSize + i] * texture2D(_ScreenTexture, (screen_position + vec2(float(i), float(j))) / vec2(720.0, 720.0)).rgb) * 3.0;
-        }
-	}
-
-	vec4 mixed_colour = vec4(final_colour / (Z * Z), 1.0) + (texture2D(noise_texture, uv) * 0.15 - 0.10);
-
-    float bc_distance = rounded_box_signed_distance_factor((uv * vec2(332.0, 472.0)) - (vec2(332.0, 472.0) / 2.0), vec2(332.0, 472.0) / 2.0, RADIUS);
-
-    float bc_smoothed_alpha = 1.0 - smoothstep(0.0, 2.0, bc_distance);
-
-    vec4 bc_quad_colour = mix(vec4(texture2D(_ScreenTexture, screen_position).rgb, 0.0), vec4(0.984313725490196, 0.796078431372549, 0.23137254901960785, bc_smoothed_alpha), bc_smoothed_alpha);
-
-    float distance = rounded_box_signed_distance_factor((uv * vec2(332.0, 472.0)) - (vec2(332.0, 472.0) / 2.0), vec2(326.0, 466.0) / 2.0, RADIUS - 4.0);
-
-    float smoothed_alpha = 1.0 - smoothstep(0.0, 2.0, distance);
-
-    vec4 quad_colour = mix(bc_quad_colour, vec4(mixed_colour.rgb, smoothed_alpha), smoothed_alpha);
-    
-    gl_FragColor = quad_colour;
-}
-";
