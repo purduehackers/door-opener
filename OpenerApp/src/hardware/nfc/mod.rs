@@ -1,23 +1,31 @@
 use std::io::Error;
 
 use pn532::serialport::SysTimer;
+use pn532::spi::SPIInterface;
 use pn532::IntoDuration;
 use pn532::{requests::SAMMode, serialport::SerialPortInterface, Pn532, Request};
 
 use crate::config::NFC_SERIAL;
 
 pub struct NFCReader {
-    pn532: Pn532<SerialPortInterface, SysTimer, 512>,
+    pn532: Pn532<SPIInterface, SysTimer, 512>,
 }
 
 impl NFCReader {
     pub fn new() -> NFCReader {
-        let port = serialport::new(NFC_SERIAL, 115_200)
-            .timeout(std::time::Duration::from_millis(10))
-            .open()
-            .expect("Failed to open port");
+        // let port = serialport::new(NFC_SERIAL, 500000)
+        //     .timeout(std::time::Duration::from_millis(10))
+        //     .open()
+        //     .expect("Failed to open port");
 
-        let interface = SerialPortInterface { port };
+        // let interface = SerialPortInterface { port };
+
+        let mut spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 500_000, Mode::Mode0)?;
+
+        let interface: SPIInterface<_, _> = SPIInterface {
+            spi,
+            cs,
+        };
 
         let timer = SysTimer::new();
 
