@@ -1,14 +1,87 @@
 use std::io::Error;
+use std::fmt::Debug;
+use core::task::Poll;
 
-use pn532::serialport::SysTimer;
-use pn532::spi::SPIInterface;
-use pn532::IntoDuration;
-use pn532::{requests::SAMMode, serialport::SerialPortInterface, Pn532, Request};
+//use pn532::serialport::SysTimer;
+use pn532::spi::{SPIInterface, PN532_SPI_DATAREAD, PN532_SPI_DATAWRITE, PN532_SPI_READY, PN532_SPI_STATREAD};
+use pn532::{Interface, IntoDuration};
+use pn532::{requests::SAMMode, Pn532, Request};
+
+use rppal::gpio::Mode;
+use rppal::spi::{Bus, SlaveSelect, Spi};
+
+use embedded_hal::blocking::spi::{Transfer, Write};
+
+use linux_embedded_hal::SysTimer;
 
 use crate::config::NFC_SERIAL;
 
+
+/// SPI Hardware Interface
+#[derive(Clone, Debug)]
+pub struct HardwareSPIInterface<SPI>
+where
+    SPI: Transfer<u8>,
+    SPI: Write<u8, Error = <SPI as Transfer<u8>>::Error>,
+    <SPI as Transfer<u8>>::Error: Debug,
+{
+    pub spi: SPI,
+}
+
+impl<SPI> Interface for HardwareSPIInterface<SPI>
+where
+    SPI: Transfer<u8>,
+    SPI: Write<u8, Error = <SPI as Transfer<u8>>::Error>,
+    <SPI as Transfer<u8>>::Error: Debug,
+{
+    type Error = <SPI as Transfer<u8>>::Error;
+
+    fn write(&mut self, frame: &[u8]) -> Result<(), Self::Error> {
+        self.spi.write(&[PN532_SPI_DATAWRITE])?;
+        println!("write() 1: {:?}", PN532_SPI_DATAWRITE);
+        self.spi.write(frame)?;
+        println!("write() 2: {:?}", frame);
+
+        // for byte in frame {
+        //     self.spi.write(&[byte.reverse_bits()])?
+        // }
+
+        Ok(())
+    }
+
+    fn wait_ready(&mut self) -> Poll<Result<(), Self::Error>> {
+        let mut buf = [0x00];
+
+        self.spi.write(&[PN532_SPI_STATREAD])?;
+        println!("wait_ready() 1: {:?}", PN532_SPI_STATREAD);
+        println!("wait_ready() 2: {:?}", buf);
+        self.spi.transfer(&mut buf)?;
+        println!("wait_ready() 3: {:?}", buf);
+
+        if buf[0] == PN532_SPI_READY {
+            Poll::Ready(Ok(()))
+        } else {
+            Poll::Pending
+        }
+    }
+
+    fn read(&mut self, buf: &mut [u8]) -> Result<(), Self::Error> {
+        self.spi.write(&[PN532_SPI_DATAREAD])?;
+        println!("read() 1: {:?}", PN532_SPI_DATAREAD);
+        println!("read() 2: {:?}", buf);
+        self.spi.transfer(buf)?;
+        println!("read() 3: {:?}", buf);
+        
+        // for byte in buf.iter_mut() {
+        //    *byte = byte.reverse_bits();
+        // }
+        Ok(())
+    }
+    
+}
+
 pub struct NFCReader {
-    pn532: Pn532<SPIInterface, SysTimer, 512>,
+    pn532: Pn532<HardwareSPIInterface<Spi>, SysTimer, 512>,
 }
 
 impl NFCReader {
@@ -20,23 +93,37 @@ impl NFCReader {
 
         // let interface = SerialPortInterface { port };
 
-        let mut spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 500_000, Mode::Mode0)?;
+        let mut spi = match Spi::new(Bus::Spi0, SlaveSelect::Ss0, 500_000, rppal::spi::Mode::Mode0) {
+            Ok(spi_device) => spi_device,
+            Err(_) => panic!("fuck you")
+        };
 
-        let interface: SPIInterface<_, _> = SPIInterface {
-            spi,
-            cs,
+        let interface: HardwareSPIInterface<_> = HardwareSPIInterface {
+            spi
         };
 
         let timer = SysTimer::new();
 
-        let mut pn532: Pn532<_, _, 512> = Pn532::new(interface, timer);
+        let mut pn532: Pn532<HardwareSPIInterface<Spi>, SysTimer, 512> = Pn532::new(interface, timer);
+        
+        // pn532.interface.send_wakeup_message().unwrap();
 
-        if let Err(e) = pn532.process(
-            &Request::sam_configuration(SAMMode::Normal, false),
-            0,
-            50.ms(),
+        // if let Err(e) = pn532.process(
+        //     &Request::sam_configuration(SAMMode::Normal, false),
+        //     1,
+        //     500.ms(),
+        // ) {
+        //     panic!("Could not initialize PN532: {e:?}")
+        // }
+
+        if let Ok(fw) = pn532.process(
+            &Request::GET_FIRMWARE_VERSION,
+            8,
+            1000.ms(),
         ) {
-            println!("Could not initialize PN532: {e:?}")
+            println!("Firmware response: {:?}", fw);
+        } else {
+            println!("Unable to communicate with device.");
         }
 
         return NFCReader { pn532 };
