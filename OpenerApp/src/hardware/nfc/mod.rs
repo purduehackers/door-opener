@@ -49,7 +49,7 @@ impl<'a> NFCReader<'a> {
 
             let message = match parse_nfc_data(passport_data) {
                 Ok(x) => x,
-                Err(e) => {
+                Err(_) => {
                     return Err(Error::OperationAborted);
                 }
             };
@@ -60,7 +60,7 @@ impl<'a> NFCReader<'a> {
             
             let passport_id = match message.records[1].data.parse::<i32>() {
                 Ok(x) => x,
-                Err(e) => {
+                Err(_) => {
                     return Err(Error::OperationAborted);
                 }
             };
