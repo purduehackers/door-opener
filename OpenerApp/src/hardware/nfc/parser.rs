@@ -41,8 +41,6 @@ pub enum NDEFParseState {
 pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
     //Pull TLV Metadata
 
-    let mut data_offset: usize;
-
     let mut parse_record_index: usize = 0;
 
     let mut parse_result: ParseResult = ParseResult {
@@ -51,7 +49,7 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
         records: vec![]
     };
 
-    data_offset = if data[1] > 0xfe {
+    let data_offset: usize = if data[1] > 0xfe {
         parse_result.message_length = ((data[2] as usize) << 8) + (data[3] as usize);
 
         4
@@ -139,7 +137,7 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
             NDEFParseState::MessageID => {
                 //next_message_id = 0;
 
-                for n in (0..next_message_id_length).rev() {
+                for _ in (0..next_message_id_length).rev() {
                     //next_message_id += (data[data_index] as i32) << (n * 8);
                     data_index += 1;
                 }
