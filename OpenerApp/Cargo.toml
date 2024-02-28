@@ -9,13 +9,13 @@ edition = "2021"
 macroquad = "0.4.4"
 resvg = "0.28.0"
 serialport = "4.3.0"
-# nfc1 = { version = "0.5.2", default-features=false, features = [ ] }
+nfc1 = { version = "0.5.2", default-features=false, features = [ ] }
 # pn532 = { version = "0.3.2", features = ["std"] }
 # pn532 = { version = "0.3.2", features = ["msb-spi"] }
-pn532 = "0.3.2"
-#rppal = { version = "0.17.1", features = ["hal"] }
-spidev = "0.6.0" 
-embedded-hal = "0.2.6"
-linux-embedded-hal = "0.3.2"
+# pn532 = "0.3.2"
+# rppal = { version = "0.17.1", features = ["hal"] }
+# spidev = "0.6.0" 
+# embedded-hal = "0.2.6"
+# linux-embedded-hal = "0.3.2"
 # rs_ws281x = { git = "https://github.com/FizzyApple12/rpi-ws281x-rust.git" }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
