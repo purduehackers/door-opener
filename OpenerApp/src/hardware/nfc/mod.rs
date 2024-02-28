@@ -42,28 +42,31 @@ impl<'a> NFCReader<'a> {
                         }
                     }
                     Err(e) => {
-                        println!("target read failed: {:?}", e);
                         return Err(e);
                     }
                 }
             }
-            
-            println!("Raw Data: {:?}", passport_data);//String::from_utf8_lossy(&passport_data));
 
             let message = match parse_nfc_data(passport_data) {
                 Ok(x) => x,
                 Err(e) => {
-                    println!("Parse Error: {:?}", e);
                     return Err(Error::OperationAborted);
                 }
             };
 
-            println!("NDEF Message: {:?}", message);
+            if message.records.len() != 3 {
+                return Err(Error::OperationAborted);
+            }
+            
+            let passport_id = match message.records[1].data.parse::<i32>() {
+                Ok(x) => x,
+                Err(e) => {
+                    return Err(Error::OperationAborted);
+                }
+            };
 
-            return Ok((message.records[1].data.parse::<i32>().unwrap(), message.records[2].data.clone()));
+            return Ok((passport_id, message.records[2].data.clone()));
         } else {
-            println!("target selection failed");
-
             return Err(Error::DeviceNotSupported);
         }
     }

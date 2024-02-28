@@ -59,8 +59,6 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
         2
     };
 
-    println!("type: {:?}, length: {:?}", parse_result.message_type, parse_result.message_length);
-
     //Start NDEF State Machine
 
     let mut data_index: usize = data_offset;
@@ -86,12 +84,8 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                 next_message_message_block = parse_ndef_message_block(data[data_index]);
                 data_index += 1;
 
-                println!("message_block: {:?}", next_message_message_block);
-
                 next_message_type_length = data[data_index].into();
                 data_index += 1;
-
-                println!("type_length: {:?}", next_message_type_length);
 
                 if next_message_message_block.short_record {
                     next_message_payload_length = data[data_index].into();
@@ -105,16 +99,12 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                     data_index += 4;
                 }
 
-                println!("payload_length: {:?}", next_message_payload_length);
-
                 next_message_id_length = -1;
 
                 if next_message_message_block.id_length {
                     next_message_id_length = data[data_index].into();
                     data_index += 1;
                 }
-
-                println!("id_length: {:?}", next_message_id_length);
 
                 NDEFParseState::MessageType
             },
@@ -125,8 +115,6 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                     next_message_type += (data[data_index] as i32) << (n * 8);
                     data_index += 1;
                 }
-
-                println!("type: {:?}", next_message_type);
 
                 if next_message_message_block.id_length {
                     NDEFParseState::MessageID
@@ -141,8 +129,6 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                     //next_message_id += (data[data_index] as i32) << (n * 8);
                     data_index += 1;
                 }
-
-                //println!("id: {:?}", next_message_id);
 
                 NDEFParseState::MessagePayload
             },
@@ -185,8 +171,6 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                     }
                     _ => { }
                 }
-
-                println!("payload: {:?}", parse_result.records[parse_record_index]);
 
                 if next_message_message_block.message_end && !next_message_message_block.chunk_flag {
                     break;
