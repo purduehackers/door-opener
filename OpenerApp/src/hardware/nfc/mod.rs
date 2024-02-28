@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use nfc1::{Device, Target, Error, Context, target_info::{TargetInfo, Iso14443a}};
+use nfc1::{Device, Target, Error, Context, target_info::TargetInfo};
 
 pub mod parser;
 use crate::hardware::nfc::parser::parse_nfc_data;
@@ -29,11 +29,10 @@ impl<'a> NFCReader<'a> {
     }
 
     pub fn read(&mut self, target: Target) -> Result<(i32, std::string::String), Error> {
-        if let TargetInfo::Iso14443a(target_info) = target.target_info {
+        if let TargetInfo::Iso14443a(_target_info) = target.target_info {
             let _ = self.device.set_property_bool(nfc1::Property::EasyFraming, true);
 
             let mut passport_data: Vec<u8> = vec![];
-            let mut num_bytes: i32 = 0;
 
             for n in (4..50).step_by(4) {
                 match self.device.initiator_transceive_bytes(&[0x30, n as u8], 16, nfc1::Timeout::Default) {
