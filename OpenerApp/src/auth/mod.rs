@@ -10,10 +10,10 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
 
     loop {
         match nfc_reader.poll() {
-            Ok(_) => {
+            Ok(target) => {
                 let _ = gui_sender.send(1);
 
-                match nfc_reader.read() {
+                match nfc_reader.read(target) {
                     Ok(data) => {
                         println!("mifare data: {:?}", data);
 
