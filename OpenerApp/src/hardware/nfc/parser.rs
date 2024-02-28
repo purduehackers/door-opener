@@ -41,7 +41,7 @@ pub enum NDEFParseState {
 pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
     //Pull TLV Metadata
 
-    let mut data_offset: usize = 0;
+    let mut data_offset: usize;
 
     let mut parse_record_index: usize = 0;
 
@@ -79,9 +79,8 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
     let mut next_message_type_length: i32 = -1;
     let mut next_message_type: i32 = -1;
     let mut next_message_id_length: i32 = -1;
-    let mut next_message_id: i32 = -1;
+    //let mut next_message_id: i32 = -1;
     let mut next_message_payload_length: i32 = -1;
-    let mut next_message_payload: i32 = -1;
 
     while data_index < parse_result.message_length + data_offset {
         data_parse_state = match data_parse_state {
@@ -138,14 +137,14 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                 }
             },
             NDEFParseState::MessageID => {
-                next_message_id = 0;
+                //next_message_id = 0;
 
-                for n in (0..next_message_type_length).rev() {
-                    next_message_id += (data[data_index] as i32) << (n * 8);
+                for n in (0..next_message_id_length).rev() {
+                    //next_message_id += (data[data_index] as i32) << (n * 8);
                     data_index += 1;
                 }
 
-                println!("id: {:?}", next_message_id);
+                //println!("id: {:?}", next_message_id);
 
                 NDEFParseState::MessagePayload
             },
