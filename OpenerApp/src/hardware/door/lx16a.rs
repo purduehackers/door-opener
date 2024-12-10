@@ -40,7 +40,7 @@ fn lower_byte(value: u16) -> u8 {
 }
 
 fn higher_byte(value: u16) -> u8 {
-    return ((value / 256) % 256) as u8;
+    return ((value >> 8) % 256) as u8;
 }
 
 // fn word(lower: u8, higher: u8) -> u16 {
@@ -77,7 +77,9 @@ impl ServoController {
             - ((servo_id as i32 + length as i32 + command as i32 + parameter_sum) % 256))
             as u8;
 
-        let _ = self.serial_port.write([0x55, 0x55, servo_id, length as u8, command].as_ref());
+        let _ = self
+            .serial_port
+            .write([0x55, 0x55, servo_id, length as u8, command].as_ref());
         let _ = self.serial_port.write(parameters.as_slice());
         let _ = self.serial_port.write([checksum].as_ref());
     }
