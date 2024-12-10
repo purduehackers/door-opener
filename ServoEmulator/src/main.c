@@ -95,13 +95,12 @@ void core0_entry() {
             checksum = next;
             int target_checksum = (255 - ((servo_id + length + command + parameter_sum) % 256));
 
-            // TODO: Reenable checksum
-            // if (checksum == target_checksum) {
-            command_state = Done;
-            // }
-            // else {
-            //     command_state = None;
-            // }
+            if (checksum == target_checksum) {
+                command_state = Done;
+            }
+            else {
+                command_state = None;
+            }
             break;
         case Done:
             break;
