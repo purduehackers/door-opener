@@ -21,11 +21,11 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
 
                         match res {
                             Ok(verified) => {
-                                gui_sender.send(if verified { 2 } else { 3 });
+                                let _ = gui_sender.send(if verified { 2 } else { 3 });
                                 if verified { door_opener.open(); }
                             }
                             Err(_) => {
-                                gui_sender.send(4);
+                                let _ = gui_sender.send(4);
                             }
                         }
                     }
