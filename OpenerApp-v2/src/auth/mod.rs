@@ -51,6 +51,7 @@ pub fn check_passport_validity(id: i32, secret: String) -> Result<bool, ()> {
     let client = reqwest::blocking::Client::new();
     let res = client
         .post("https://id.purduehackers.com/api/door")
+        .header("Content-Type", "application/json")
         .body(format!("{{\"id\": {id}, \"secret\": \"{secret}\"}}"))
         .send();
 
