@@ -15,20 +15,24 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
 
                 match nfc_reader.read(target) {
                     Ok(data) => {
-                        let verified = check_passport_validity(data.0, data.1);
+                        let res = check_passport_validity(data.0, data.1);
 
                         thread::sleep(Duration::from_millis(2500));
 
-                        let _ = gui_sender.send(if verified { 2 } else { 3 });
-
-                        if verified {
-                            door_opener.open();
+                        match res {
+                            Ok(verified) => {
+                                gui_sender.send(if verified { 2 } else { 3 });
+                                if verified { door_opener.open(); }
+                            }
+                            Err(_) => {
+                                gui_sender.send(4);
+                            }
                         }
                     }
                     Err(_) => {
                         thread::sleep(Duration::from_millis(2500));
 
-                        let _ = gui_sender.send(3);
+                        let _ = gui_sender.send(5);
                     }
                 }
 
@@ -43,7 +47,7 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
     }
 }
 
-pub fn check_passport_validity(id: i32, secret: String) -> bool {
+pub fn check_passport_validity(id: i32, secret: String) -> Result<bool, ()> {
     let client = reqwest::blocking::Client::new();
     let res = client
         .post("https://id.purduehackers.com/api/door")
@@ -53,14 +57,14 @@ pub fn check_passport_validity(id: i32, secret: String) -> bool {
     match res {
         Ok(res) => match res.status() {
             StatusCode::OK => {
-                return true;
+                return Ok(true);
             }
             _ => {
-                return false;
+                return Ok(false);
             }
         },
         Err(_) => {
-            return false;
+            return Err(());
         }
     }
 }
