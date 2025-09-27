@@ -60,8 +60,8 @@ pub fn check_passport_validity(id: i32, secret: String) -> Result<bool, ()> {
                 return Ok(true);
             }
             _ => {
-                println!("Got error status: {}", response.status());
-                println!("Got error text: {}", response.text().unwrap());
+                println!("Got error status: {}", res.status());
+                println!("Got error text: {}", res.text().unwrap());
                 return Ok(false);
             }
         },
