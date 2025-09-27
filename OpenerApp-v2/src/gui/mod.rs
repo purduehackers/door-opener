@@ -394,7 +394,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         1.0
     );
     let _ = draw_text(
-        "Please take away your passport, then put it close and do not move it during the scan!",
+        "Please take away your passport, then hold it still during the scan!",
         32.0,
         398.0,
         648.0,
