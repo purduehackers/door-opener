@@ -55,6 +55,8 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
     let mut welcome_opacity: f32 = 255.0;
     let mut accepted_opacity: f32 = 0.0;
     let mut rejected_opacity: f32 = 0.0;
+    let mut net_error_opacity: f32 = 0.0;
+    let mut nfc_error_opacity: f32 = 0.0;
 
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
 
@@ -80,12 +82,14 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
                 // led_controller.set_colour(animating_auth_state.get().0);
 
                 match animating_auth_state.get().0 {
+                    // Welcome screen
                     0 => {
                         auth_state.set(0, -1.0);
                         show_welcome.set(true, -1.0);
 
                         animating_auth_state.set((-1, true), 1.0);
                     }
+                    // Loading screen
                     1 => {
                         show_welcome.set(false, -1.0);
                         active_message.set(0, -1.0);
@@ -93,6 +97,7 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
                         auth_state.set(1, 0.5);
                         animating_auth_state.set((-1, true), 1.5); // after previous + 1.0s
                     }
+                    // Verified passport screen
                     2 => {
                         auth_state.set(2, -1.0);
                         active_message.set(1, -1.0);
@@ -101,9 +106,28 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
                         active_message.set(0, 6.5); // after welcome + 5.0s
                         animating_auth_state.set((-1, true), 2.0); // after welcome + 0.5s
                     }
+                    // Invalid passport screen
                     3 => {
                         auth_state.set(3, -1.0);
                         active_message.set(2, -1.0);
+
+                        show_welcome.set(true, 1.5);
+                        active_message.set(0, 11.5); // after welcome + 10.0s
+                        animating_auth_state.set((-1, true), 2.0); // after previous + 0.5s
+                    }
+                    // Net error screen
+                    4 => {
+                        auth_state.set(3, -1.0);
+                        active_message.set(3, -1.0);
+
+                        show_welcome.set(true, 1.5);
+                        active_message.set(0, 11.5); // after welcome + 10.0s
+                        animating_auth_state.set((-1, true), 2.0); // after previous + 0.5s
+                    }
+                    // NFC error screen
+                    5 => {
+                        auth_state.set(3, -1.0);
+                        active_message.set(4, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
@@ -145,10 +169,14 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
         welcome_opacity = f32::clamp(welcome_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 0) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
         accepted_opacity = f32::clamp(accepted_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 1) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
         rejected_opacity = f32::clamp(rejected_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 2) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
+        net_error_opacity = f32::clamp(net_error_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 3) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
+        nfc_error_opacity = f32::clamp(nfc_error_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 4) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
 
         draw_welcome_window(welcome_opacity as u8, &segoe_ui, &doorbell_qr, &doorbell_qr_pointer);
         draw_accepted_window(accepted_opacity as u8, &segoe_ui);
         draw_rejected_window(rejected_opacity as u8, &segoe_ui, &doorbell_qr);
+        draw_net_error_window(net_error_opacity as u8, &segoe_ui, &doorbell_qr);
+        draw_nfc_error_window(nfc_error_opacity as u8, &segoe_ui, &doorbell_qr);
 
         draw_passport(
             360.0,
@@ -277,6 +305,96 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
     );
     let _ = draw_text(
         "Please try again or scan the QR code to ring the doorbell manually!",
+        32.0,
+        398.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        48,
+        1.0
+    );
+
+    draw_texture_ex(
+        doorbell_qr,
+        500.0,
+        179.0,
+        Color::from_rgba(255, 255, 255, opacity),
+        DrawTextureParams {
+            dest_size: Some(Vec2 {
+                x: 192.0,
+                y: 192.0
+            }),
+            source: Option::None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: Option::None,
+        },
+    );
+}
+
+fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
+    draw_rectangle(0.0, 140.0, 720.0, 440.0, Color::from_rgba(10, 10, 10, opacity));
+    draw_rectangle(0.0, 140.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(0.0, 576.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+
+    let _ = draw_text(
+        "Something went wrong!",
+        32.0,
+        179.0,
+        420.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        96,
+        1.0
+    );
+    let _ = draw_text(
+        "We're having connectivity issues at the moment. Please try again.",
+        32.0,
+        398.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        48,
+        1.0
+    );
+
+    draw_texture_ex(
+        doorbell_qr,
+        500.0,
+        179.0,
+        Color::from_rgba(255, 255, 255, opacity),
+        DrawTextureParams {
+            dest_size: Some(Vec2 {
+                x: 192.0,
+                y: 192.0
+            }),
+            source: Option::None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: Option::None,
+        },
+    );
+}
+
+fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
+    draw_rectangle(0.0, 140.0, 720.0, 440.0, Color::from_rgba(10, 10, 10, opacity));
+    draw_rectangle(0.0, 140.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(0.0, 576.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+
+    let _ = draw_text(
+        "NFC read error!",
+        32.0,
+        179.0,
+        420.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        &font,
+        96,
+        1.0
+    );
+    let _ = draw_text(
+        "Please take away your passport, then put it close and do not move it during the scan!",
         32.0,
         398.0,
         648.0,
