@@ -6,6 +6,12 @@
 
 ## Building/deployment
 
+**Warning**: most of the code in this repository assumes that you have a user
+account named `hackers` on your Pi.
+
+This project can be built on the Raspbian OS Lite image. However, since the project
+displays a GUI, you do need X11 installed (read below).
+
 Due to the GPIO libraries used, this project should be built directly on the
 door opener. SSH into the door opener, pull any changes, and run `cargo build --release`.
 If you are a member of Purdue Hackers and would like to contribute to door opener,
