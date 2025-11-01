@@ -1,0 +1,15 @@
+[Unit]
+Description=The Opener App that Drives the Door Opener
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+Group=root
+ExecStart=startx /home/hackers/.xinitrc
+
+[Install]
+WantedBy=multi-user.target
