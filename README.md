@@ -11,4 +11,8 @@ door opener. SSH into the door opener, pull any changes, and run `cargo build --
 If you are a member of Purdue Hackers and would like to contribute to door opener,
 contact an organizer for SSH details!
 
-If you are imaging a new door opener, install `libssl-dev` and `libudev-dev`.
+If you are imaging a new door opener, install the following dependencies:
+
+- `libssl-dev`
+- `libudev-dev`
+- `libnfc-dev`
