@@ -17,3 +17,4 @@ If you are imaging a new door opener, install the following dependencies:
 - `libudev-dev`
 - `libnfc-dev`
 - `libclang-dev`
+- `xinit` (for X11)
