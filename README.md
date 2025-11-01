@@ -16,3 +16,4 @@ If you are imaging a new door opener, install the following dependencies:
 - `libssl-dev`
 - `libudev-dev`
 - `libnfc-dev`
+- `libclang-dev`
