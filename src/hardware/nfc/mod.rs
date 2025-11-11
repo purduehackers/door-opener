@@ -5,14 +5,14 @@ use nfc1::{Device, Target, Error, Context, target_info::TargetInfo};
 pub mod parser;
 use crate::hardware::nfc::parser::parse_nfc_data;
 
-pub struct NFCReader<'a> {
-    device: Device<'a>,
+pub struct NFCReader {
+    device: Device,
 }
 
-impl<'a> NFCReader<'a> {
-    pub fn new() -> NFCReader<'a> {
-        let context: &'static mut Context<'static>  = Box::leak(Box::new(Context::new().unwrap()));
-        let mut device: Device<'a> = context.open().unwrap();
+impl NFCReader {
+    pub fn new() -> NFCReader {
+        let context: &'static mut Context  = Box::leak(Box::new(Context::new().unwrap()));
+        let mut device: Device = context.open().unwrap();
     
         let _ = device.initiator_init();
         let _ = device.set_property_bool(nfc1::Property::InfiniteSelect, true);
