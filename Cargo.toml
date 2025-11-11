@@ -22,4 +22,4 @@ reqwest = { version = "0.11", features = ["blocking", "json"] }
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
-nfc1 = { version = "0.5.2" }
+nfc1 = { version = "0.5.2", default-features=false, features = [ "vendored" ] }
