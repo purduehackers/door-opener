@@ -9,7 +9,7 @@ edition = "2021"
 macroquad = "0.4.4"
 resvg = "0.28.0"
 serialport = "4.3.0"
-nfc1 = { version = "0.5.2", default-features=false, features = [ ] }
+nfc1 = { git = "https://github.com/ericswpark/rs-nfc1.git", branch = "nfc1-sys-patch", default-features=false, features = [ ] }
 # pn532 = { version = "0.3.2", features = ["std"] }
 # pn532 = { version = "0.3.2", features = ["msb-spi"] }
 # pn532 = "0.3.2"
@@ -22,4 +22,4 @@ reqwest = { version = "0.11", features = ["blocking", "json"] }
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
-nfc1 = { version = "0.5.2", default-features=false, features = [ "vendored" ] }
+nfc1 = { git = "https://github.com/ericswpark/rs-nfc1.git", branch = "nfc1-sys-patch", default-features=false, features = [ "vendored" ] }
