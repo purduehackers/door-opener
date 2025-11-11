@@ -6,6 +6,8 @@
 
 ## Building/deployment
 
+### On the Door Opener (Raspberry Pi)
+
 **Warning**: most of the code in this repository assumes that you have a user
 account named `hackers` on your Pi.
 
