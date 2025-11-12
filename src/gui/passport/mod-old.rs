@@ -104,7 +104,7 @@
 //         1 => {
 //             let linear_x = f32::clamp(passport_data.current_animation_time, 0.0, 1.0);
 //             let curved_x: f32 = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
-    
+
 //             passport_data.current_x =
 //                 super::float32_lerp(passport_data.last_final_x, x, curved_x);
 //             passport_data.current_y =
@@ -112,8 +112,8 @@
 //         },
 //         _default => {
 //             let linear_x = passport_data.current_animation_time - 1.0;
-//             let mut curved_x: f32 = 0.0; 
-            
+//             let mut curved_x: f32 = 0.0;
+
 //             if linear_x >= 0.0 {
 //                 curved_x = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
 //             }
@@ -173,7 +173,7 @@
 //         passport_data.current_y - (passport_data.logo_texture.height() / 2.0),
 //         Color::from_hex(0xfbcb3b),
 //     );
-    
+
 //     let spinner_center_x = passport_data.current_x - (passport_data.loading_spinner_texture.width() / 2.0);
 //     let spinner_center_y = passport_data.current_y - (passport_data.loading_spinner_texture.height() / 2.0);
 
@@ -260,19 +260,19 @@
 // 	const int kSize = (mSize - 1) / 2;
 // 	float kernel[mSize];
 // 	vec3 final_colour = vec3(0.0);
-	
+
 // 	float sigma = 20.0;
 // 	float Z = 0.0;
 // 	for (int j = 0; j <= kSize; ++j)
 // 	{
 // 		kernel[kSize + j] = kernel[kSize - j] = normpdf(float(j), sigma);
 // 	}
-	
+
 // 	for (int j = 0; j < mSize; ++j)
 // 	{
 // 		Z += kernel[j];
 // 	}
-	
+
 // 	for (int i = -kSize; i <= kSize; i += 2)
 // 	{
 // 		for (int j = -kSize; j <= kSize; j += 2)
@@ -294,7 +294,7 @@
 //     float smoothed_alpha = 1.0 - smoothstep(0.0, 2.0, distance);
 
 //     vec4 quad_colour = mix(bc_quad_colour, vec4(mixed_colour.rgb, smoothed_alpha), smoothed_alpha);
-    
+
 //     gl_FragColor = quad_colour;
 // }
 // ";

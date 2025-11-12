@@ -15,7 +15,7 @@ pub struct PassportData {
     last_state: i32,
     current_animation_time: f32,
     last_final_x: f32,
-    last_final_y: f32
+    last_final_y: f32,
 }
 
 pub async fn initialise_passport() -> PassportData {
@@ -40,7 +40,7 @@ pub async fn initialise_passport() -> PassportData {
         last_state: 0,
         current_animation_time: 0.0,
         last_final_x: 0.0,
-        last_final_y: 0.0
+        last_final_y: 0.0,
     };
 }
 
@@ -59,32 +59,30 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
         0 => {
             passport_data.current_x = x;
             passport_data.current_y = y;
-        },
+        }
         1 => {
             let linear_x = f32::clamp(passport_data.current_animation_time, 0.0, 1.0);
-            let curved_x: f32 = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
-    
-            passport_data.current_x =
-                super::float32_lerp(passport_data.last_final_x, x, curved_x);
-            passport_data.current_y =
-                super::float32_lerp(passport_data.last_final_y, y, curved_x);
-        },
+            let curved_x: f32 =
+                -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
+
+            passport_data.current_x = super::float32_lerp(passport_data.last_final_x, x, curved_x);
+            passport_data.current_y = super::float32_lerp(passport_data.last_final_y, y, curved_x);
+        }
         _default => {
             let linear_x = passport_data.current_animation_time - 1.0;
-            let mut curved_x: f32 = 0.0; 
-            
+            let mut curved_x: f32 = 0.0;
+
             if linear_x >= 0.0 {
                 curved_x = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
             }
 
-            passport_data.current_x =
-                super::float32_lerp(passport_data.last_final_x, x, curved_x);
-            passport_data.current_y =
-                super::float32_lerp(passport_data.last_final_y, y, curved_x);
+            passport_data.current_x = super::float32_lerp(passport_data.last_final_x, x, curved_x);
+            passport_data.current_y = super::float32_lerp(passport_data.last_final_y, y, curved_x);
         }
     }
 
-    passport_data.current_animation_time = f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
+    passport_data.current_animation_time =
+        f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
 
     draw_rectangle(
         passport_data.current_x - 360.0,
@@ -130,9 +128,11 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
         passport_data.current_y - (passport_data.logo_texture.height() / 2.0),
         Color::from_hex(0xfbcb3b),
     );
-    
-    let spinner_center_x = passport_data.current_x - (passport_data.loading_spinner_texture.width() / 2.0);
-    let spinner_center_y = passport_data.current_y - (passport_data.loading_spinner_texture.height() / 2.0);
+
+    let spinner_center_x =
+        passport_data.current_x - (passport_data.loading_spinner_texture.width() / 2.0);
+    let spinner_center_y =
+        passport_data.current_y - (passport_data.loading_spinner_texture.height() / 2.0);
 
     draw_texture_ex(
         &passport_data.loading_spinner_texture,

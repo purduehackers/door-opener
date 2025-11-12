@@ -27,7 +27,6 @@
 // const ACCEPTED_COLOUR: [u8; 4] = [ 94, 197, 34, 0 ];
 // const REJECTED_COLOUR: [u8; 4] = [ 68, 68, 239, 0 ];
 
-
 // pub fn u8_lerp(source: u8, destination: u8, percent: f32) -> u8 {
 //     return ((source as f32) * (1.0 - percent) + (destination as f32) * percent) as u8;
 // }
@@ -61,7 +60,7 @@
 //                     0, // Channel Index
 //                     ChannelBuilder::new()
 //                         .pin(18)
-//                         .count(16) 
+//                         .count(16)
 //                         .strip_type(StripType::Ws2812)
 //                         .brightness(255)
 //                         .build(),
@@ -90,20 +89,20 @@
 //                     },
 //                     delta_time.as_secs_f32() * 10.0,
 //                 );
-    
+
 //                 let leds = controller.leds_mut(0);
 
 //                 for led in &mut *leds {
 //                     *led = current_colour;
 //                 }
-            
+
 //                 controller.render().unwrap();
 //             }
 //         });
 
 //         return Self { tx };
 //     }
-    
+
 //     pub fn set_colour(&mut self, colour: i32) {
 //         let _ = self.tx.send(colour);
 //     }

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use nfc1::{Device, Target, Error, Context, target_info::TargetInfo};
+use nfc1::{target_info::TargetInfo, Context, Device, Error, Target};
 
 pub mod parser;
 pub mod structs;
@@ -13,9 +13,9 @@ pub struct NFCReader {
 
 impl NFCReader {
     pub fn new() -> Result<NFCReader, Error> {
-        let context: &'static mut Context  = Box::leak(Box::new(Context::new().unwrap()));
+        let context: &'static mut Context = Box::leak(Box::new(Context::new().unwrap()));
         let mut device: Device = context.open().unwrap();
-    
+
         device.initiator_init()?;
         device.set_property_bool(nfc1::Property::InfiniteSelect, true)?;
         device.set_property_bool(nfc1::Property::AutoIso144434, true)?;
@@ -24,20 +24,29 @@ impl NFCReader {
     }
 
     pub fn poll(&mut self) -> Result<Target, Error> {
-        return self.device.initiator_poll_target(&[nfc1::Modulation {
-            modulation_type: nfc1::ModulationType::Iso14443a,
-            baud_rate: nfc1::BaudRate::Baud106,
-        }], 0xff, Duration::from_millis(150));
+        return self.device.initiator_poll_target(
+            &[nfc1::Modulation {
+                modulation_type: nfc1::ModulationType::Iso14443a,
+                baud_rate: nfc1::BaudRate::Baud106,
+            }],
+            0xff,
+            Duration::from_millis(150),
+        );
     }
 
     pub fn read(&mut self, target: Target) -> Result<PassportData, Error> {
         if let TargetInfo::Iso14443a(_target_info) = target.target_info {
-            self.device.set_property_bool(nfc1::Property::EasyFraming, true)?;
+            self.device
+                .set_property_bool(nfc1::Property::EasyFraming, true)?;
 
             let mut passport_data: Vec<u8> = vec![];
 
             for n in (4..50).step_by(4) {
-                match self.device.initiator_transceive_bytes(&[0x30, n as u8], 16, nfc1::Timeout::Default) {
+                match self.device.initiator_transceive_bytes(
+                    &[0x30, n as u8],
+                    16,
+                    nfc1::Timeout::Default,
+                ) {
                     Ok(data) => {
                         for byte in data {
                             passport_data.push(byte);
@@ -59,7 +68,7 @@ impl NFCReader {
             if message.records.len() != 3 {
                 return Err(Error::OperationAborted);
             }
-            
+
             let passport_id = match message.records[1].data.parse::<i32>() {
                 Ok(x) => x,
                 Err(_) => {
@@ -68,7 +77,10 @@ impl NFCReader {
             };
             let passport_secret = message.records[2].data.clone();
 
-            return Ok(PassportData { id: passport_id, secret: passport_secret });
+            return Ok(PassportData {
+                id: passport_id,
+                secret: passport_secret,
+            });
         } else {
             return Err(Error::DeviceNotSupported);
         }
