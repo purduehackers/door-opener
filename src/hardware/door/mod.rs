@@ -15,6 +15,12 @@ pub struct DoorOpener {
     tx: Sender<i32>,
 }
 
+impl Default for DoorOpener {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DoorOpener {
     pub fn new() -> DoorOpener {
         let (tx, rx) = channel::<i32>();
@@ -38,7 +44,7 @@ impl DoorOpener {
             }
         });
 
-        return Self { tx };
+        Self { tx }
     }
 
     pub fn open(&self) {

@@ -198,7 +198,7 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
         };
     }
 
-    return Ok(parse_result);
+    Ok(parse_result)
 }
 
 #[derive(Debug)]
@@ -212,14 +212,14 @@ pub struct MessageBlock {
 }
 
 pub fn parse_ndef_message_block(byte: u8) -> MessageBlock {
-    return MessageBlock {
+    MessageBlock {
         //message_begin: (byte & 0b10000000) != 0,
         message_end: (byte & 0b01000000) != 0,
         chunk_flag: (byte & 0b00100000) != 0,
         short_record: (byte & 0b00010000) != 0,
         id_length: (byte & 0b00001000) != 0,
         //type_name_format: byte & 0b00000111
-    };
+    }
 }
 
 pub fn get_uri_protocol(identifier: u8) -> &'static str {

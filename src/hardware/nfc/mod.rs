@@ -20,18 +20,18 @@ impl NFCReader {
         device.set_property_bool(nfc1::Property::InfiniteSelect, true)?;
         device.set_property_bool(nfc1::Property::AutoIso144434, true)?;
 
-        return Ok(Self { device });
+        Ok(Self { device })
     }
 
     pub fn poll(&mut self) -> Result<Target, Error> {
-        return self.device.initiator_poll_target(
+        self.device.initiator_poll_target(
             &[nfc1::Modulation {
                 modulation_type: nfc1::ModulationType::Iso14443a,
                 baud_rate: nfc1::BaudRate::Baud106,
             }],
             0xff,
             Duration::from_millis(150),
-        );
+        )
     }
 
     pub fn read(&mut self, target: Target) -> Result<PassportData, Error> {
@@ -77,12 +77,12 @@ impl NFCReader {
             };
             let passport_secret = message.records[2].data.clone();
 
-            return Ok(PassportData {
+            Ok(PassportData {
                 id: passport_id,
                 secret: passport_secret,
-            });
+            })
         } else {
-            return Err(Error::DeviceNotSupported);
+            Err(Error::DeviceNotSupported)
         }
     }
 }

@@ -36,11 +36,11 @@ const SERVO_MOVE_TIME_WRITE: u8 = 1;
 // const SERVO_ERROR_LOCKED_ROTOR: u8 = 4;
 
 fn lower_byte(value: u16) -> u8 {
-    return (value % 256) as u8;
+    (value % 256) as u8
 }
 
 fn higher_byte(value: u16) -> u8 {
-    return ((value >> 8) % 256) as u8;
+    ((value >> 8) % 256) as u8
 }
 
 // fn word(lower: u8, higher: u8) -> u16 {
@@ -59,9 +59,9 @@ impl ServoController {
 
         std::thread::sleep(std::time::Duration::from_millis(3000));
 
-        return ServoController {
-            serial_port: serial_port,
-        };
+        ServoController {
+            serial_port,
+        }
     }
 
     fn _command(&mut self, servo_id: u8, command: u8, parameters: Vec<u8>) {
@@ -79,7 +79,7 @@ impl ServoController {
 
         let _ = self
             .serial_port
-            .write([0x55, 0x55, servo_id, length as u8, command].as_ref());
+            .write([0x55, 0x55, servo_id, { length }, command].as_ref());
         let _ = self.serial_port.write(parameters.as_slice());
         let _ = self.serial_port.write([checksum].as_ref());
     }
