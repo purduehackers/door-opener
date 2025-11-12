@@ -15,7 +15,7 @@ pub fn auth_entry(gui_sender: Sender<i32>) {
 
                 match nfc_reader.read(target) {
                     Ok(data) => {
-                        let res = check_passport_validity(data.0, data.1);
+                        let res = check_passport_validity(data.id, data.secret);
 
                         thread::sleep(Duration::from_millis(2500));
 
