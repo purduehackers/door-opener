@@ -1,13 +1,13 @@
 pub mod background;
+pub mod font_engine;
 pub mod passport;
 pub mod svg;
-pub mod font_engine;
 
 use std::sync::mpsc::Receiver;
 
 use macroquad::prelude::*;
 
-use self::{passport::draw_passport, font_engine::draw_text};
+use self::{font_engine::draw_text, passport::draw_passport};
 use crate::timedvariable::TimedVariable;
 
 // use crate::hardware::led::LEDController;
@@ -61,7 +61,11 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
 
     let doorbell_qr: Texture2D = Texture2D::from_file_with_format(DOORBELL_QR, None);
-    let doorbell_qr_pointer = svg::svg_to_texture(String::from_utf8(DOORBELL_QR_POINTER.to_vec()).unwrap().as_str());
+    let doorbell_qr_pointer = svg::svg_to_texture(
+        String::from_utf8(DOORBELL_QR_POINTER.to_vec())
+            .unwrap()
+            .as_str(),
+    );
 
     let background_data = background::initialise_background().await;
 
@@ -166,13 +170,78 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
 
         background::draw_background(&background_data);
 
-        welcome_opacity = f32::clamp(welcome_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 0) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
-        accepted_opacity = f32::clamp(accepted_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 1) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
-        rejected_opacity = f32::clamp(rejected_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 2) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
-        net_error_opacity = f32::clamp(net_error_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 3) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
-        nfc_error_opacity = f32::clamp(nfc_error_opacity + (255.0 * 2.0 * (if show_welcome.get() && (active_message.get() == 4) { 1.0 } else { -1.0 })) * delta_time, 0.0, 255.0);
+        welcome_opacity = f32::clamp(
+            welcome_opacity
+                + (255.0
+                    * 2.0
+                    * (if show_welcome.get() && (active_message.get() == 0) {
+                        1.0
+                    } else {
+                        -1.0
+                    }))
+                    * delta_time,
+            0.0,
+            255.0,
+        );
+        accepted_opacity = f32::clamp(
+            accepted_opacity
+                + (255.0
+                    * 2.0
+                    * (if show_welcome.get() && (active_message.get() == 1) {
+                        1.0
+                    } else {
+                        -1.0
+                    }))
+                    * delta_time,
+            0.0,
+            255.0,
+        );
+        rejected_opacity = f32::clamp(
+            rejected_opacity
+                + (255.0
+                    * 2.0
+                    * (if show_welcome.get() && (active_message.get() == 2) {
+                        1.0
+                    } else {
+                        -1.0
+                    }))
+                    * delta_time,
+            0.0,
+            255.0,
+        );
+        net_error_opacity = f32::clamp(
+            net_error_opacity
+                + (255.0
+                    * 2.0
+                    * (if show_welcome.get() && (active_message.get() == 3) {
+                        1.0
+                    } else {
+                        -1.0
+                    }))
+                    * delta_time,
+            0.0,
+            255.0,
+        );
+        nfc_error_opacity = f32::clamp(
+            nfc_error_opacity
+                + (255.0
+                    * 2.0
+                    * (if show_welcome.get() && (active_message.get() == 4) {
+                        1.0
+                    } else {
+                        -1.0
+                    }))
+                    * delta_time,
+            0.0,
+            255.0,
+        );
 
-        draw_welcome_window(welcome_opacity as u8, &segoe_ui, &doorbell_qr, &doorbell_qr_pointer);
+        draw_welcome_window(
+            welcome_opacity as u8,
+            &segoe_ui,
+            &doorbell_qr,
+            &doorbell_qr_pointer,
+        );
         draw_accepted_window(accepted_opacity as u8, &segoe_ui);
         draw_rejected_window(rejected_opacity as u8, &segoe_ui, &doorbell_qr);
         draw_net_error_window(net_error_opacity as u8, &segoe_ui, &doorbell_qr);
@@ -199,10 +268,33 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
     }
 }
 
-fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbell_qr_pointer: &Texture2D) {
-    draw_rectangle(0.0, 164.0, 720.0, 392.0, Color::from_rgba(10, 10, 10, opacity));
-    draw_rectangle(0.0, 164.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
-    draw_rectangle(0.0, 552.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+fn draw_welcome_window(
+    opacity: u8,
+    font: &Font,
+    doorbell_qr: &Texture2D,
+    doorbell_qr_pointer: &Texture2D,
+) {
+    draw_rectangle(
+        0.0,
+        164.0,
+        720.0,
+        392.0,
+        Color::from_rgba(10, 10, 10, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        164.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        552.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
 
     let _ = draw_text(
         "Welcome to Hack Night",
@@ -212,7 +304,7 @@ fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbe
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         96,
-        1.0
+        1.0,
     );
     let _ = draw_text(
         "Scan your passport to start",
@@ -222,7 +314,7 @@ fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbe
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         48,
-        1.0
+        1.0,
     );
 
     draw_texture_ex(
@@ -231,10 +323,7 @@ fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbe
         422.0,
         Color::from_rgba(255, 255, 255, opacity),
         DrawTextureParams {
-            dest_size: Some(Vec2 {
-                x: 96.0,
-                y: 96.0
-            }),
+            dest_size: Some(Vec2 { x: 96.0, y: 96.0 }),
             source: Option::None,
             rotation: 0.0,
             flip_x: false,
@@ -248,10 +337,7 @@ fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbe
         358.0,
         Color::from_rgba(255, 255, 255, opacity),
         DrawTextureParams {
-            dest_size: Some(Vec2 {
-                x: 160.0,
-                y: 64.0
-            }),
+            dest_size: Some(Vec2 { x: 160.0, y: 64.0 }),
             source: Option::None,
             rotation: 0.0,
             flip_x: false,
@@ -262,9 +348,27 @@ fn draw_welcome_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D, doorbe
 }
 
 fn draw_accepted_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 212.0, 720.0, 296.0, Color::from_rgba(10, 10, 10, opacity));
-    draw_rectangle(0.0, 212.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
-    draw_rectangle(0.0, 504.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(
+        0.0,
+        212.0,
+        720.0,
+        296.0,
+        Color::from_rgba(10, 10, 10, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        212.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        504.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
 
     let _ = draw_text(
         "Welcome back!",
@@ -274,7 +378,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         96,
-        1.0
+        1.0,
     );
     let _ = draw_text(
         "Please be mindful of the door opening",
@@ -284,14 +388,32 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         48,
-        1.0
+        1.0,
     );
 }
 
 fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
-    draw_rectangle(0.0, 140.0, 720.0, 440.0, Color::from_rgba(10, 10, 10, opacity));
-    draw_rectangle(0.0, 140.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
-    draw_rectangle(0.0, 576.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        440.0,
+        Color::from_rgba(10, 10, 10, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        576.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
 
     let _ = draw_text(
         "Invalid Passport!",
@@ -301,7 +423,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         96,
-        1.0
+        1.0,
     );
     let _ = draw_text(
         "Please try again or scan the QR code to ring the doorbell manually!",
@@ -311,7 +433,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         48,
-        1.0
+        1.0,
     );
 
     draw_texture_ex(
@@ -320,10 +442,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         179.0,
         Color::from_rgba(255, 255, 255, opacity),
         DrawTextureParams {
-            dest_size: Some(Vec2 {
-                x: 192.0,
-                y: 192.0
-            }),
+            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
             source: Option::None,
             rotation: 0.0,
             flip_x: false,
@@ -334,9 +453,27 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
 }
 
 fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
-    draw_rectangle(0.0, 140.0, 720.0, 440.0, Color::from_rgba(10, 10, 10, opacity));
-    draw_rectangle(0.0, 140.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
-    draw_rectangle(0.0, 576.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        440.0,
+        Color::from_rgba(10, 10, 10, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        576.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
 
     let _ = draw_text(
         "Something went wrong!",
@@ -346,7 +483,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         96,
-        1.0
+        1.0,
     );
     let _ = draw_text(
         "We're having connectivity issues at the moment. Please try again.",
@@ -356,7 +493,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         48,
-        1.0
+        1.0,
     );
 
     draw_texture_ex(
@@ -365,10 +502,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         179.0,
         Color::from_rgba(255, 255, 255, opacity),
         DrawTextureParams {
-            dest_size: Some(Vec2 {
-                x: 192.0,
-                y: 192.0
-            }),
+            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
             source: Option::None,
             rotation: 0.0,
             flip_x: false,
@@ -379,9 +513,27 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
 }
 
 fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
-    draw_rectangle(0.0, 140.0, 720.0, 440.0, Color::from_rgba(10, 10, 10, opacity));
-    draw_rectangle(0.0, 140.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
-    draw_rectangle(0.0, 576.0, 720.0, 4.0, Color::from_rgba(251, 203, 59, opacity));
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        440.0,
+        Color::from_rgba(10, 10, 10, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        576.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
 
     let _ = draw_text(
         "NFC read error!",
@@ -391,7 +543,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         96,
-        1.0
+        1.0,
     );
     let _ = draw_text(
         "Please take away your passport, then hold it still during the scan!",
@@ -401,7 +553,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         Color::from_rgba(251, 203, 59, opacity),
         &font,
         48,
-        1.0
+        1.0,
     );
 
     draw_texture_ex(
@@ -410,10 +562,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         179.0,
         Color::from_rgba(255, 255, 255, opacity),
         DrawTextureParams {
-            dest_size: Some(Vec2 {
-                x: 192.0,
-                y: 192.0
-            }),
+            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
             source: Option::None,
             rotation: 0.0,
             flip_x: false,
