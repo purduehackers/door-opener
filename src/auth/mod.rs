@@ -5,7 +5,7 @@ use reqwest::StatusCode;
 use crate::hardware::{door::DoorOpener, nfc::NFCReader};
 
 pub fn auth_entry(gui_sender: Sender<i32>) {
-    let mut nfc_reader: NFCReader = NFCReader::new();
+    let mut nfc_reader: NFCReader = NFCReader::new().expect("Failed to initialize NFC reader");
     let door_opener: DoorOpener = DoorOpener::new();
 
     loop {
