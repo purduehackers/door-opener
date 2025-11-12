@@ -14,7 +14,7 @@ pub struct NFCReader {
 impl NFCReader {
     pub fn new() -> Result<NFCReader, Error> {
         let context: &'static mut Context = Box::leak(Box::new(Context::new().unwrap()));
-        let mut device: Device = context.open().unwrap();
+        let mut device: Device = context.open()?;
 
         device.initiator_init()?;
         device.set_property_bool(nfc1::Property::InfiniteSelect, true)?;
