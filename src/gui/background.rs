@@ -29,15 +29,14 @@ pub async fn initialise_background() -> BackgroundData {
             },
             uniforms: vec![("time".to_owned(), UniformType::Float1)],
             textures: vec!["logo_texture".to_string()],
-            ..Default::default()
         },
     )
     .unwrap();
 
-    return BackgroundData {
+    BackgroundData {
         material: background_material,
-        logo_texture: logo_texture,
-    };
+        logo_texture,
+    }
 }
 
 pub fn draw_background(background_data: &BackgroundData) {
@@ -53,7 +52,7 @@ pub fn draw_background(background_data: &BackgroundData) {
     gl_use_default_material();
 }
 
-const BACKGROUND_VERTEX_SHADER: &'static str = "#version 100
+const BACKGROUND_VERTEX_SHADER: &str = "#version 100
 attribute vec3 position;
 attribute vec2 texcoord;
 
@@ -69,7 +68,7 @@ void main() {
 }
 ";
 
-const BACKGROUND_FRAGMENT_SHADER: &'static str = "#version 100
+const BACKGROUND_FRAGMENT_SHADER: &str = "#version 100
 precision lowp float;
 
 varying vec2 pixel_coord;

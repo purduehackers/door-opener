@@ -44,7 +44,7 @@ pub fn draw_text(
                     x + current_text_width,
                     y + current_text_y,
                     TextParams {
-                        font_size: font_size,
+                        font_size,
                         color: colour,
                         font: Some(font),
                         font_scale: 1.0,
@@ -63,7 +63,7 @@ pub fn draw_text(
                     x + current_text_width,
                     y + current_text_y,
                     TextParams {
-                        font_size: font_size,
+                        font_size,
                         color: colour,
                         font: Some(font),
                         font_scale: 1.0,
@@ -79,7 +79,7 @@ pub fn draw_text(
                 x + current_text_width,
                 y + current_text_y,
                 TextParams {
-                    font_size: font_size,
+                    font_size,
                     color: colour,
                     font: Some(font),
                     font_scale: 1.0,
@@ -96,9 +96,9 @@ pub fn draw_text(
     // I need this for font box visualization, please don't remove
     //macroquad::shapes::draw_rectangle(x, y, width, current_text_y, Color::from_rgba(255, 0, 0, 50));
 
-    return TextDimensions {
+    TextDimensions {
         width,
         height: current_text_y,
         offset_y: dimensions.offset_y,
-    };
+    }
 }

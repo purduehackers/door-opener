@@ -17,15 +17,15 @@ const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
 
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
-    return source * (1.0 - percent) + destination * percent;
+    source * (1.0 - percent) + destination * percent
 }
 pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
-    return Color {
+    Color {
         r: float32_lerp(source.r, destination.r, percent),
         g: float32_lerp(source.g, destination.g, percent),
         b: float32_lerp(source.b, destination.b, percent),
         a: float32_lerp(source.a, destination.a, percent),
-    };
+    }
 }
 
 pub fn gui_entry(nfc_messages: Receiver<i32>) {
@@ -302,7 +302,7 @@ fn draw_welcome_window(
         203.0,
         648.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         96,
         1.0,
     );
@@ -312,7 +312,7 @@ fn draw_welcome_window(
         422.0,
         500.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         48,
         1.0,
     );
@@ -376,7 +376,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
         251.0,
         648.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         96,
         1.0,
     );
@@ -386,7 +386,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
         374.0,
         648.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         48,
         1.0,
     );
@@ -421,7 +421,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         179.0,
         420.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         96,
         1.0,
     );
@@ -431,7 +431,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         398.0,
         648.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         48,
         1.0,
     );
@@ -481,7 +481,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         179.0,
         420.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         96,
         1.0,
     );
@@ -491,7 +491,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         398.0,
         648.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         48,
         1.0,
     );
@@ -541,7 +541,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         179.0,
         420.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         96,
         1.0,
     );
@@ -551,7 +551,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         398.0,
         648.0,
         Color::from_rgba(251, 203, 59, opacity),
-        &font,
+        font,
         48,
         1.0,
     );

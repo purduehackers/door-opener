@@ -22,6 +22,6 @@ pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
 }
 
 pub fn svg_to_texture(svg_str: &str) -> Texture2D {
-    let png_data = svg_to_png(&svg_str);
+    let png_data = svg_to_png(svg_str);
     Texture2D::from_file_with_format(&png_data, Some(ImageFormat::Png))
 }

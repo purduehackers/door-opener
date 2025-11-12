@@ -30,9 +30,9 @@ pub async fn initialise_passport() -> PassportData {
             .as_str(),
     );
 
-    return PassportData {
-        logo_texture: logo_texture,
-        loading_spinner_texture: loading_spinner_texture,
+    PassportData {
+        logo_texture,
+        loading_spinner_texture,
         current_spinner_colour: Color::from_hex(0xfbcb3b),
         current_spinner_cutout_opacity: 0.0,
         current_x: 0.0,
@@ -41,7 +41,7 @@ pub async fn initialise_passport() -> PassportData {
         current_animation_time: 0.0,
         last_final_x: 0.0,
         last_final_y: 0.0,
-    };
+    }
 }
 
 pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportData) {
