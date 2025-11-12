@@ -10,15 +10,15 @@ pub struct NFCReader {
 }
 
 impl NFCReader {
-    pub fn new() -> NFCReader {
+    pub fn new() -> Result<NFCReader, Error> {
         let context: &'static mut Context  = Box::leak(Box::new(Context::new().unwrap()));
         let mut device: Device = context.open().unwrap();
     
-        let _ = device.initiator_init();
-        let _ = device.set_property_bool(nfc1::Property::InfiniteSelect, true);
-        let _ = device.set_property_bool(nfc1::Property::AutoIso144434, true);
+        device.initiator_init()?;
+        device.set_property_bool(nfc1::Property::InfiniteSelect, true)?;
+        device.set_property_bool(nfc1::Property::AutoIso144434, true)?;
 
-        return Self { device };
+        return Ok(Self { device });
     }
 
     pub fn poll(&mut self) -> Result<Target, Error> {
