@@ -3,7 +3,9 @@ use std::time::Duration;
 use nfc1::{Device, Target, Error, Context, target_info::TargetInfo};
 
 pub mod parser;
-use crate::hardware::nfc::parser::parse_nfc_data;
+pub mod structs;
+
+use crate::hardware::nfc::{parser::parse_nfc_data, structs::PassportData};
 
 pub struct NFCReader {
     device: Device,
@@ -28,9 +30,9 @@ impl NFCReader {
         }], 0xff, Duration::from_millis(150));
     }
 
-    pub fn read(&mut self, target: Target) -> Result<(i32, std::string::String), Error> {
+    pub fn read(&mut self, target: Target) -> Result<PassportData, Error> {
         if let TargetInfo::Iso14443a(_target_info) = target.target_info {
-            let _ = self.device.set_property_bool(nfc1::Property::EasyFraming, true);
+            self.device.set_property_bool(nfc1::Property::EasyFraming, true)?;
 
             let mut passport_data: Vec<u8> = vec![];
 
@@ -64,8 +66,9 @@ impl NFCReader {
                     return Err(Error::OperationAborted);
                 }
             };
+            let passport_secret = message.records[2].data.clone();
 
-            return Ok((passport_id, message.records[2].data.clone()));
+            return Ok(PassportData { id: passport_id, secret: passport_secret });
         } else {
             return Err(Error::DeviceNotSupported);
         }
