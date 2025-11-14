@@ -8,7 +8,9 @@ use std::sync::mpsc::Receiver;
 use macroquad::prelude::*;
 
 use self::{font_engine::draw_text, passport::draw_passport};
-use crate::timedvariable::TimedVariable;
+use crate::{enums::AuthState, timedvariable::TimedVariable};
+
+use AuthState::*;
 
 // use crate::hardware::led::LEDController;
 
@@ -28,7 +30,7 @@ pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
     }
 }
 
-pub fn gui_entry(nfc_messages: Receiver<i32>) {
+pub fn gui_entry(nfc_messages: Receiver<AuthState>) {
     macroquad::Window::from_config(
         Conf {
             window_title: "Door Opener".to_owned(),
@@ -43,11 +45,12 @@ pub fn gui_entry(nfc_messages: Receiver<i32>) {
     )
 }
 
-async fn gui_main(nfc_messages: Receiver<i32>) {
+async fn gui_main(nfc_messages: Receiver<AuthState>) {
     // let mut led_controller = LEDController::new();
 
-    let mut queued_auth_state: (i32, bool) = (-1, false);
-    let mut animating_auth_state: TimedVariable<(i32, bool)> = TimedVariable::new((-1, false));
+    let mut queued_auth_state: (Option<AuthState>, bool) = (None, false);
+    let mut animating_auth_state: TimedVariable<(Option<AuthState>, bool)> =
+        TimedVariable::new((None, false));
     let mut auth_state: TimedVariable<i32> = TimedVariable::new(0);
     let mut show_welcome: TimedVariable<bool> = TimedVariable::new(true);
     let mut active_message: TimedVariable<i32> = TimedVariable::new(0);
@@ -82,62 +85,61 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
         if animating_auth_state.get().1 {
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
 
-            if animating_auth_state.get().0 > -1 {
+            if animating_auth_state.get().0.is_some() {
                 // led_controller.set_colour(animating_auth_state.get().0);
 
-                match animating_auth_state.get().0 {
+                match animating_auth_state.get().0.unwrap() {
                     // Welcome screen
-                    0 => {
+                    Idle => {
                         auth_state.set(0, -1.0);
                         show_welcome.set(true, -1.0);
 
-                        animating_auth_state.set((-1, true), 1.0);
+                        animating_auth_state.set((None, true), 1.0);
                     }
                     // Loading screen
-                    1 => {
+                    Pending => {
                         show_welcome.set(false, -1.0);
                         active_message.set(0, -1.0);
 
                         auth_state.set(1, 0.5);
-                        animating_auth_state.set((-1, true), 1.5); // after previous + 1.0s
+                        animating_auth_state.set((None, true), 1.5); // after previous + 1.0s
                     }
                     // Verified passport screen
-                    2 => {
+                    Valid => {
                         auth_state.set(2, -1.0);
                         active_message.set(1, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 6.5); // after welcome + 5.0s
-                        animating_auth_state.set((-1, true), 2.0); // after welcome + 0.5s
+                        animating_auth_state.set((None, true), 2.0); // after welcome + 0.5s
                     }
                     // Invalid passport screen
-                    3 => {
+                    Invalid => {
                         auth_state.set(3, -1.0);
                         active_message.set(2, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set((-1, true), 2.0); // after previous + 0.5s
+                        animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
                     // Net error screen
-                    4 => {
+                    NetError => {
                         auth_state.set(3, -1.0);
                         active_message.set(3, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set((-1, true), 2.0); // after previous + 0.5s
+                        animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
                     // NFC error screen
-                    5 => {
+                    NFCError => {
                         auth_state.set(3, -1.0);
                         active_message.set(4, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set((-1, true), 2.0); // after previous + 0.5s
+                        animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
-                    _default => {}
                 }
             }
         }
@@ -147,16 +149,16 @@ async fn gui_main(nfc_messages: Receiver<i32>) {
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
             queued_auth_state.1 = false;
 
-            if (animating_auth_state.get().0 < 0) && (queued_auth_state.0 >= 0) {
+            if (animating_auth_state.get().0.is_none()) && (queued_auth_state.0.is_some()) {
                 animating_auth_state.set((queued_auth_state.0, true), -1.0);
 
-                queued_auth_state = (-1, false);
+                queued_auth_state = (None, false);
             }
         }
 
         match nfc_messages.try_recv() {
             Ok(x) => {
-                queued_auth_state = (x, true);
+                queued_auth_state = (Some(x), true);
             }
             Err(std::sync::mpsc::TryRecvError::Empty) => (),
             Err(std::sync::mpsc::TryRecvError::Disconnected) => {
