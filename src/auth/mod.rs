@@ -1,6 +1,6 @@
 use std::{string::String, sync::mpsc::Sender, thread, time::Duration};
 
-use reqwest::StatusCode;
+use reqwest::{StatusCode, Error};
 
 use crate::{
     enums::AuthState,
@@ -51,7 +51,7 @@ pub fn auth_entry(gui_sender: Sender<AuthState>) {
     }
 }
 
-pub fn check_passport_validity(id: i32, secret: String) -> Result<bool, ()> {
+pub fn check_passport_validity(id: i32, secret: String) -> Result<bool, Error> {
     let client = reqwest::blocking::Client::new();
     let res = client
         .post("https://id.purduehackers.com/api/door")
@@ -68,6 +68,6 @@ pub fn check_passport_validity(id: i32, secret: String) -> Result<bool, ()> {
                 Ok(false)
             }
         },
-        Err(_) => Err(()),
+        Err(e) => Err(e),
     }
 }
