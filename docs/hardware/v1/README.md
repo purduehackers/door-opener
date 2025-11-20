@@ -9,7 +9,7 @@ the NFC board and LED strips.
 
 The upper portion is held together with $${\color{red}\text{four T8 screws}}$$,
 at the outer perimeter of the enclosure. The
-$${\color{blue}\text{inner four Philips \#0 screws}}$$ hold the fan used to cool
+$${\color{blue}\text{inner four Philips \\#0 screws}}$$ hold the fan used to cool
 the Pi, and should not be removed unless to service the fan.
 
 The lower portion is held together with $${\color{orange}\text{four T10 screws}}$$.
