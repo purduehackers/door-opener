@@ -7,6 +7,8 @@
 v1 is comprised of the upper portion housing the Pi, and the lower portion housing
 the NFC board and LED strips.
 
+![Door opener v1 external back screw positions](./images/door-opener-v1-external-back-screw-positions.png)
+
 The upper portion is held together with $${\color{red}\text{four T8 screws}}$$,
 at the outer perimeter of the enclosure. The
 $${\color{blue}\text{inner four Philips \\#0 screws}}$$ hold the fan used to cool
