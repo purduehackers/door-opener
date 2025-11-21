@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::too_many_lines)]
+
 pub mod background;
 pub mod font_engine;
 pub mod passport;
@@ -18,9 +21,12 @@ const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
 
+#[must_use]
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
     source * (1.0 - percent) + destination * percent
 }
+
+#[must_use]
 pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
     Color {
         r: float32_lerp(source.r, destination.r, percent),
@@ -42,7 +48,7 @@ pub fn gui_entry(nfc_messages: Receiver<AuthState>) {
             ..Default::default()
         },
         gui_main(nfc_messages),
-    )
+    );
 }
 
 async fn gui_main(nfc_messages: Receiver<AuthState>) {
@@ -85,10 +91,10 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
         if animating_auth_state.get().1 {
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
 
-            if animating_auth_state.get().0.is_some() {
+            if let Some(auth_state1) = animating_auth_state.get().0 {
                 // led_controller.set_colour(animating_auth_state.get().0);
 
-                match animating_auth_state.get().0.unwrap() {
+                match auth_state1 {
                     // Welcome screen
                     Idle => {
                         auth_state.set(0, -1.0);
@@ -164,7 +170,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                 // probably display the error message somehow
             }
-        };
+        }
 
         let delta_time: f32 = get_frame_time();
 
@@ -252,10 +258,9 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
         draw_passport(
             360.0,
             match auth_state.get() {
-                0 => 1200.0,
                 1 => 360.0,
                 2 => -1200.0,
-                3 => 1200.0,
+                0 | 3 => 1200.0,
                 _default => 1200.0,
             },
             auth_state.get(),
@@ -266,7 +271,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             return;
         }
 
-        next_frame().await
+        next_frame().await;
     }
 }
 
