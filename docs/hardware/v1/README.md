@@ -43,3 +43,5 @@ The pin-out is as follows:
 | SS    | 24 - GPIO 8 (SPI0 CE0) |
 | VCC   | 17 - 3v3 Power |
 | GND   | 25 - ground (any ground will work — 6, 9, 14, 20, 25, 30, 34, and 39) |
+
+Refer to [pinout.xyz](https://pinout.xyz/) for the Raspberry Pi pinout.
