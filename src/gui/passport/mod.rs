@@ -1,5 +1,9 @@
 use macroquad::prelude::*;
 
+use crate::AuthState;
+
+use AuthState::*;
+
 use super::svg;
 
 const PASSPORT_EMBLEM: &[u8] = include_bytes!("../assets/passport-emblem.svg");
@@ -12,7 +16,7 @@ pub struct PassportData {
     current_spinner_cutout_opacity: f32,
     current_x: f32,
     current_y: f32,
-    last_state: i32,
+    last_state: AuthState,
     current_animation_time: f32,
     last_final_x: f32,
     last_final_y: f32,
@@ -37,14 +41,14 @@ pub async fn initialise_passport() -> PassportData {
         current_spinner_cutout_opacity: 0.0,
         current_x: 0.0,
         current_y: 0.0,
-        last_state: 0,
+        last_state: Idle,
         current_animation_time: 0.0,
         last_final_x: 0.0,
         last_final_y: 0.0,
     }
 }
 
-pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportData) {
+pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut PassportData) {
     let delta_time: f32 = get_frame_time();
     let loading_spinner_angle = (get_time() * 3.0) as f32;
 
@@ -56,11 +60,11 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
     }
 
     match state {
-        0 => {
+        Idle => {
             passport_data.current_x = x;
             passport_data.current_y = y;
         }
-        1 => {
+        Pending => {
             let linear_x = f32::clamp(passport_data.current_animation_time, 0.0, 1.0);
             let curved_x: f32 =
                 -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
@@ -102,10 +106,10 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
         passport_data.current_spinner_cutout_opacity,
         match state {
-            0 => 1.0,
-            1 => 0.0,
-            2 => 1.0,
-            3 => 1.0,
+            Idle => 1.0,
+            Pending => 0.0,
+            Valid => 1.0,
+            Invalid => 1.0,
             _default => 1.0,
         },
         delta_time * 10.0,
@@ -113,10 +117,10 @@ pub fn draw_passport(x: f32, y: f32, state: i32, passport_data: &mut PassportDat
     passport_data.current_spinner_colour = super::colour_lerp(
         passport_data.current_spinner_colour,
         match state {
-            0 => Color::from_hex(0xfbcb3b),
-            1 => Color::from_hex(0xfbcb3b),
-            2 => Color::from_hex(0x22c55e),
-            3 => Color::from_hex(0xef4444),
+            Idle => Color::from_hex(0xfbcb3b),
+            Pending => Color::from_hex(0xfbcb3b),
+            Valid => Color::from_hex(0x22c55e),
+            Invalid => Color::from_hex(0xef4444),
             _default => Color::from_hex(0xfbcb3b),
         },
         delta_time * 10.0,

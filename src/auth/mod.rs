@@ -11,8 +11,7 @@ use AuthState::*;
 
 pub fn auth_entry(gui_sender: Sender<AuthState>) {
     let mut nfc_reader: NFCReader = NFCReader::new().expect("Failed to initialize NFC reader");
-    let door_opener: DoorOpener =
-        DoorOpener::new().expect("Failed to initialize door-opener hardware");
+    let door_opener: Option<DoorOpener> = DoorOpener::new().ok();
 
     loop {
         if let Ok(target) = nfc_reader.poll() {
@@ -28,7 +27,12 @@ pub fn auth_entry(gui_sender: Sender<AuthState>) {
                         Ok(verified) => {
                             let _ = gui_sender.send(if verified { Valid } else { Invalid });
                             if verified {
-                                door_opener.open();
+                                if let Some(ref door_opener) = door_opener {
+                                    door_opener.open();
+                                } else {
+                                    let _ = gui_sender.send(PusherError);
+                                }
+                                
                             }
                         }
                         Err(_) => {
