@@ -117,7 +117,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
                     // Invalid passport screen
                     Invalid => {
                         auth_state.set(Invalid, -1.0);
-                        active_message.set(Valid, -1.0);
+                        active_message.set(Invalid, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(Idle, 11.5); // after welcome + 10.0s
@@ -126,7 +126,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
                     // Net error screen
                     NetError => {
                         auth_state.set(NetError, -1.0);
-                        active_message.set(Invalid, -1.0);
+                        active_message.set(NetError, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(Idle, 11.5); // after welcome + 10.0s
@@ -135,7 +135,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
                     // NFC error screen
                     NFCError => {
                         auth_state.set(NFCError, -1.0);
-                        active_message.set(NetError, -1.0);
+                        active_message.set(NFCError, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(Idle, 11.5); // after welcome + 10.0s
@@ -143,7 +143,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
                     }
                     PusherError => {
                         auth_state.set(PusherError, -1.0);
-                        active_message.set(NetError, -1.0);
+                        active_message.set(PusherError, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(Idle, 11.5); // after welcome + 10.0s
