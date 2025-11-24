@@ -53,13 +53,14 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
         TimedVariable::new((None, false));
     let mut auth_state: TimedVariable<AuthState> = TimedVariable::new(Idle);
     let mut show_welcome: TimedVariable<bool> = TimedVariable::new(true);
-    let mut active_message: TimedVariable<i32> = TimedVariable::new(0);
+    let mut active_message: TimedVariable<AuthState> = TimedVariable::new(Idle);
 
     let mut welcome_opacity: f32 = 255.0;
     let mut accepted_opacity: f32 = 0.0;
     let mut rejected_opacity: f32 = 0.0;
     let mut net_error_opacity: f32 = 0.0;
     let mut nfc_error_opacity: f32 = 0.0;
+    let mut pusher_error_opacity: f32 = 0.0;
 
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
 
@@ -99,7 +100,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
                     // Loading screen
                     Pending => {
                         show_welcome.set(false, -1.0);
-                        active_message.set(0, -1.0);
+                        active_message.set(Idle, -1.0);
 
                         auth_state.set(Pending, 0.5);
                         animating_auth_state.set((None, true), 1.5); // after previous + 1.0s
@@ -107,45 +108,45 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
                     // Verified passport screen
                     Valid => {
                         auth_state.set(Valid, -1.0);
-                        active_message.set(1, -1.0);
+                        active_message.set(Pending, -1.0);
 
                         show_welcome.set(true, 1.5);
-                        active_message.set(0, 6.5); // after welcome + 5.0s
+                        active_message.set(Idle, 6.5); // after welcome + 5.0s
                         animating_auth_state.set((None, true), 2.0); // after welcome + 0.5s
                     }
                     // Invalid passport screen
                     Invalid => {
                         auth_state.set(Invalid, -1.0);
-                        active_message.set(2, -1.0);
+                        active_message.set(Valid, -1.0);
 
                         show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
+                        active_message.set(Idle, 11.5); // after welcome + 10.0s
                         animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
                     // Net error screen
                     NetError => {
                         auth_state.set(NetError, -1.0);
-                        active_message.set(3, -1.0);
+                        active_message.set(Invalid, -1.0);
 
                         show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
+                        active_message.set(Idle, 11.5); // after welcome + 10.0s
                         animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
                     // NFC error screen
                     NFCError => {
                         auth_state.set(NFCError, -1.0);
-                        active_message.set(4, -1.0);
+                        active_message.set(NetError, -1.0);
 
                         show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
+                        active_message.set(Idle, 11.5); // after welcome + 10.0s
                         animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
                     PusherError => {
                         auth_state.set(PusherError, -1.0);
-                        active_message.set(4, -1.0);
+                        active_message.set(NetError, -1.0);
 
                         show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
+                        active_message.set(Idle, 11.5); // after welcome + 10.0s
                         animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
                     }
                 }
@@ -184,7 +185,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             welcome_opacity
                 + (255.0
                     * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 0) {
+                    * (if show_welcome.get() && (active_message.get() == Idle) {
                         1.0
                     } else {
                         -1.0
@@ -197,7 +198,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             accepted_opacity
                 + (255.0
                     * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 1) {
+                    * (if show_welcome.get() && (active_message.get() == Valid) {
                         1.0
                     } else {
                         -1.0
@@ -210,7 +211,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             rejected_opacity
                 + (255.0
                     * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 2) {
+                    * (if show_welcome.get() && (active_message.get() == Invalid) {
                         1.0
                     } else {
                         -1.0
@@ -223,7 +224,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             net_error_opacity
                 + (255.0
                     * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 3) {
+                    * (if show_welcome.get() && (active_message.get() == NetError) {
                         1.0
                     } else {
                         -1.0
@@ -236,7 +237,20 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             nfc_error_opacity
                 + (255.0
                     * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 4) {
+                    * (if show_welcome.get() && (active_message.get() == NFCError) {
+                        1.0
+                    } else {
+                        -1.0
+                    }))
+                    * delta_time,
+            0.0,
+            255.0,
+        );
+        pusher_error_opacity = f32::clamp(
+            pusher_error_opacity
+                + (255.0
+                    * 2.0
+                    * (if show_welcome.get() && (active_message.get() == PusherError) {
                         1.0
                     } else {
                         -1.0
@@ -256,6 +270,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
         draw_rejected_window(rejected_opacity as u8, &segoe_ui, &doorbell_qr);
         draw_net_error_window(net_error_opacity as u8, &segoe_ui, &doorbell_qr);
         draw_nfc_error_window(nfc_error_opacity as u8, &segoe_ui, &doorbell_qr);
+        draw_pusher_error_window(pusher_error_opacity as u8, &segoe_ui, &doorbell_qr);
 
         draw_passport(
             360.0,
@@ -557,6 +572,66 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
     );
     let _ = draw_text(
         "Please take away your passport, then hold it still during the scan!",
+        32.0,
+        398.0,
+        648.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        font,
+        48,
+        1.0,
+    );
+
+    draw_texture_ex(
+        doorbell_qr,
+        500.0,
+        179.0,
+        Color::from_rgba(255, 255, 255, opacity),
+        DrawTextureParams {
+            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
+            source: Option::None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: Option::None,
+        },
+    );
+}
+
+fn draw_pusher_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        440.0,
+        Color::from_rgba(10, 10, 10, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        140.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+    draw_rectangle(
+        0.0,
+        576.0,
+        720.0,
+        4.0,
+        Color::from_rgba(251, 203, 59, opacity),
+    );
+
+    let _ = draw_text(
+        "Pusher error!",
+        32.0,
+        179.0,
+        420.0,
+        Color::from_rgba(251, 203, 59, opacity),
+        font,
+        96,
+        1.0,
+    );
+    let _ = draw_text(
+        "Failed to communicate with the pusher; please use the doorbell!",
         32.0,
         398.0,
         648.0,
