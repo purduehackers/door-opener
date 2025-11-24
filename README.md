@@ -27,6 +27,14 @@ If you are imaging a new door opener, install the following dependencies:
 - `libclang-dev`
 - `xinit` (for X11)
 
+You must also configure details for the NFC board (PN532) you are using. Edit
+`/etc/nfc/libnfc.conf` and uncomment `device.connstring`. Depending on which SPI
+port/pin you've connected the NFC board to, set this value accordingly. Example:
+
+```
+device.connstring = "pn532_spi:/dev/spidev0.0"
+```
+
 ### Local development
 
 If you are developing this repository locally, there are some additional packages
