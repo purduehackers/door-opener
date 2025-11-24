@@ -45,6 +45,14 @@ pub fn gui_entry(nfc_messages: Receiver<AuthState>) {
     )
 }
 
+fn calculate_opacity(opacity: f32, delta_time: f32, condition: bool) -> f32 {
+    f32::clamp(
+        opacity + (255.0 * 2.0 * if condition { 1.0 } else { -1.0 }) * delta_time,
+        0.0,
+        255.0,
+    )
+}
+
 async fn gui_main(nfc_messages: Receiver<AuthState>) {
     // let mut led_controller = LEDController::new();
 
@@ -181,83 +189,35 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
 
         background::draw_background(&background_data);
 
-        welcome_opacity = f32::clamp(
-            welcome_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == Idle) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
+        welcome_opacity = calculate_opacity(
+            welcome_opacity,
+            delta_time,
+            show_welcome.get() && (active_message.get() == Idle),
         );
-        accepted_opacity = f32::clamp(
-            accepted_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == Valid) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
+        accepted_opacity = calculate_opacity(
+            accepted_opacity,
+            delta_time,
+            show_welcome.get() && (active_message.get() == Valid),
         );
-        rejected_opacity = f32::clamp(
-            rejected_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == Invalid) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
+        rejected_opacity = calculate_opacity(
+            rejected_opacity,
+            delta_time,
+            show_welcome.get() && (active_message.get() == Invalid),
         );
-        net_error_opacity = f32::clamp(
-            net_error_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == NetError) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
+        net_error_opacity = calculate_opacity(
+            net_error_opacity,
+            delta_time,
+            show_welcome.get() && (active_message.get() == NetError),
         );
-        nfc_error_opacity = f32::clamp(
-            nfc_error_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == NFCError) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
+        nfc_error_opacity = calculate_opacity(
+            nfc_error_opacity,
+            delta_time,
+            show_welcome.get() && (active_message.get() == NFCError),
         );
-        pusher_error_opacity = f32::clamp(
-            pusher_error_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == PusherError) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
+        pusher_error_opacity = calculate_opacity(
+            pusher_error_opacity,
+            delta_time,
+            show_welcome.get() && (active_message.get() == PusherError),
         );
 
         draw_welcome_window(
