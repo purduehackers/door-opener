@@ -51,17 +51,17 @@ pub struct ServoController {
 }
 
 impl ServoController {
-    pub fn new(port_name: String) -> ServoController {
+    pub fn new(port_name: String) -> Result<ServoController, String> {
         let serial_port = serialport::new(port_name, 115_200)
             .timeout(std::time::Duration::from_millis(10))
             .open()
-            .expect("Failed to open port");
+            .map_err(|e| return format!("Failed to open port: {e}"))?;
 
         std::thread::sleep(std::time::Duration::from_millis(3000));
 
-        ServoController {
+        Ok(ServoController {
             serial_port,
-        }
+        })
     }
 
     fn _command(&mut self, servo_id: u8, command: u8, parameters: Vec<u8>) {

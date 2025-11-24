@@ -5,6 +5,8 @@ use std::{
     thread, time,
 };
 
+use thiserror::Error;
+
 use crate::config::{
     DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, DOOR_SERVO_RELEASED_POSITION, DOOR_SERVO_SERIAL,
 };
@@ -15,16 +17,17 @@ pub struct DoorOpener {
     tx: Sender<i32>,
 }
 
-impl Default for DoorOpener {
-    fn default() -> Self {
-        Self::new()
-    }
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("failed to initialize servo controller: {error}")]
+    ServoControllerInitError { error: String },
 }
 
 impl DoorOpener {
-    pub fn new() -> DoorOpener {
+    pub fn new() -> Result<DoorOpener, Error> {
         let (tx, rx) = channel::<i32>();
-        let mut servo_controller = ServoController::new(DOOR_SERVO_SERIAL.to_string());
+        let mut servo_controller = ServoController::new(DOOR_SERVO_SERIAL.to_string())
+            .map_err(|e| Error::ServoControllerInitError { error: e })?;
 
         thread::spawn(move || {
             loop {
@@ -44,7 +47,7 @@ impl DoorOpener {
             }
         });
 
-        Self { tx }
+        Ok(Self { tx })
     }
 
     pub fn open(&self) {
