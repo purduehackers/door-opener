@@ -1,7 +1,5 @@
 use macroquad::{prelude::ImageFormat, texture::Texture2D};
 use resvg::usvg::PostProcessingSteps;
-use resvg::usvg::TreeParsing;
-use resvg::usvg::TreePostProc;
 use resvg::usvg::fontdb;
 
 pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
