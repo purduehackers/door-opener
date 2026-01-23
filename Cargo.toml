@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macroquad = "0.4.4"
+macroquad = "=0.4.4"
 resvg = "0.28.0"
 serialport = "4.3.0"
 nfc1 = { version = "0.5.2", default-features=false, features = [ ] }
