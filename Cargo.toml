@@ -18,7 +18,7 @@ nfc1 = { version = "=0.6.0", default-features = false, features = [] }
 # embedded-hal = "0.2.6"
 # linux-embedded-hal = "0.3.2"
 # rs_ws281x = { git = "https://github.com/FizzyApple12/rpi-ws281x-rust.git" }
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
