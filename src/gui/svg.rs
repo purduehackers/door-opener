@@ -1,5 +1,8 @@
 use macroquad::{prelude::ImageFormat, texture::Texture2D};
-use resvg::usvg_text_layout::{fontdb, TreeTextToPath};
+use resvg::usvg::fontdb;
+use resvg::usvg::TreeParsing;
+use resvg::usvg::TreeTextToPath;
+use resvg::FitTo;
 
 pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
     let opt = resvg::usvg::Options::default();
@@ -13,7 +16,7 @@ pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
 
     resvg::render(
         &tree,
-        resvg::usvg::FitTo::Original,
+        FitTo::Original,
         resvg::tiny_skia::Transform::default(),
         pixmap.as_mut(),
     )
