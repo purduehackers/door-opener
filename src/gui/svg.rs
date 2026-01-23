@@ -6,7 +6,7 @@ pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
     let mut tree = resvg::usvg::Tree::from_str(svg_str, &opt).unwrap();
     let mut fontdb = fontdb::Database::new();
     fontdb.load_system_fonts();
-    tree.convert_text(&fontdb, opt.keep_named_groups);
+    tree.convert_text(&fontdb);
     let pixmap_size = tree.size.to_screen_size();
     let mut pixmap =
         resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
