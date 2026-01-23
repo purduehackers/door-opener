@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 macroquad = "0.4.14"
-resvg = "0.33.0"
+resvg = "0.34.0"
 serialport = "4.3.0"
 nfc1 = { version = "=0.6.0", default-features = false, features = [] }
 # pn532 = { version = "0.3.2", features = ["std"] }
