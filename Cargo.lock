@@ -144,12 +144,11 @@ checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
 
 [[package]]
 name = "cc"
-version = "1.2.45"
+version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35900b6c8d709fb1d854671ae27aeaa9eec2f8b01b364e1619a40da3e6fe2afe"
+checksum = "f1174fb0b6ec23863f8b971027804a42614e347eafb0a95bf0b12cdae21fc4d0"
 dependencies = [
- "find-msvc-tools",
- "shlex",
+ "libc",
 ]
 
 [[package]]
@@ -180,9 +179,9 @@ dependencies = [
 
 [[package]]
 name = "cmake"
-version = "0.1.54"
+version = "0.1.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7caa3f9de89ddbe2c607f4101924c5abec803763ae9534e4f4d7d8f84aa81f0"
+checksum = "e24a03c8b52922d68a1589ad61032f2c1aa5a8158d2aa0d93c6e9534944bbad6"
 dependencies = [
  "cc",
 ]
@@ -260,12 +259,6 @@ name = "fastrand"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25cbce373ec4653f1a01a31e8a5e5ec0c622dc27ff9c4e6606eefef5cbbed4a5"
-
-[[package]]
-name = "find-msvc-tools"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52051878f80a721bb68ebfbc930e07b65ba72f2da88968ea5c06fd6ca3d3a127"
 
 [[package]]
 name = "find-winsdk"
@@ -843,16 +836,18 @@ checksum = "e1bcdd74c20ad5d95aacd60ef9ba40fdf77f767051040541df557b7a9b2a2121"
 
 [[package]]
 name = "nfc1"
-version = "0.6.0"
-source = "git+https://github.com/ericswpark/rs-nfc1.git?branch=nfc1-sys-patch#3047d54e73f51dac706b5dfe12d3eae5e3e5300a"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4149b2ad1275003c20ae647b441ebed84274ef325c238b0b050362431e2cf05c"
 dependencies = [
  "nfc1-sys",
 ]
 
 [[package]]
 name = "nfc1-sys"
-version = "0.3.10"
-source = "git+https://github.com/ericswpark/rs-nfc1-sys.git?branch=dep-update#e1df6b480486287ca5a0d169052647a6ce2b6654"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06372021f6b5d976a0bd28f200c60e2cd2d98d17a377c8c9eaeef5378dca8ff2"
 dependencies = [
  "bindgen",
  "cc",
