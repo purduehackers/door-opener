@@ -27,7 +27,7 @@ pub async fn initialise_background() -> BackgroundData {
                 )),
                 ..Default::default()
             },
-            uniforms: vec![("time".to_owned(), UniformType::Float1)],
+            uniforms: vec![UniformDesc::new("time", UniformType::Float1)],
             textures: vec!["logo_texture".to_string()],
         },
     )
