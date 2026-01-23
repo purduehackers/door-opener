@@ -2,10 +2,9 @@ use macroquad::{prelude::ImageFormat, texture::Texture2D};
 use resvg::usvg::fontdb;
 
 pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
-    let opt = resvg::usvg::Options::default();
-    let mut fontdb = fontdb::Database::new();
-    fontdb.load_system_fonts();
-    let tree = resvg::usvg::Tree::from_str(svg_str, &opt, &fontdb).unwrap();
+    let mut opt = resvg::usvg::Options::default();
+    opt.fontdb_mut().load_system_fonts();
+    let tree = resvg::usvg::Tree::from_str(svg_str, &opt).unwrap();
     let mut fontdb = fontdb::Database::new();
     fontdb.load_system_fonts();
 
