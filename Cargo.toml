@@ -10,10 +10,6 @@ macroquad = "0.4.14"
 resvg = "0.46.0"
 serialport = "4.8.1"
 nfc1 = { version = "=0.6.0", default-features = false, features = [] }
-# rppal = { version = "0.17.1", features = ["hal"] }
-# spidev = "0.6.0"
-# embedded-hal = "0.2.6"
-# linux-embedded-hal = "0.3.2"
 # rs_ws281x = { git = "https://github.com/FizzyApple12/rpi-ws281x-rust.git" }
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 
