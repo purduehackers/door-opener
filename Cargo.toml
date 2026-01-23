@@ -8,7 +8,7 @@ edition = "2024"
 [dependencies]
 macroquad = "0.4.14"
 resvg = "0.46.0"
-serialport = "4.3.0"
+serialport = "4.8.1"
 nfc1 = { version = "=0.6.0", default-features = false, features = [] }
 # pn532 = { version = "0.3.2", features = ["std"] }
 # pn532 = { version = "0.3.2", features = ["msb-spi"] }
