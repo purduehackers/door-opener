@@ -1,22 +1,30 @@
 use macroquad::{prelude::ImageFormat, texture::Texture2D};
-use resvg::usvg::fontdb;
+use resvg::usvg::PostProcessingSteps;
 use resvg::usvg::TreeParsing;
-use resvg::usvg::TreeTextToPath;
+use resvg::usvg::TreePostProc;
+use resvg::usvg::fontdb;
 
 pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
     let opt = resvg::usvg::Options::default();
     let mut tree = resvg::usvg::Tree::from_str(svg_str, &opt).unwrap();
     let mut fontdb = fontdb::Database::new();
     fontdb.load_system_fonts();
-    tree.convert_text(&fontdb);
+    tree.postprocess(
+        PostProcessingSteps {
+            convert_text_into_paths: true,
+        },
+        &fontdb,
+    );
 
-    let rtree = resvg::Tree::from_usvg(&tree);
-
-    let pixmap_size = rtree.size.to_int_size();
+    let pixmap_size = tree.size.to_int_size();
     let mut pixmap =
         resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
 
-    rtree.render(resvg::tiny_skia::Transform::default(), &mut pixmap.as_mut());
+    resvg::render(
+        &tree,
+        resvg::tiny_skia::Transform::default(),
+        &mut pixmap.as_mut(),
+    );
     pixmap.encode_png().unwrap()
 }
 
