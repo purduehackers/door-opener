@@ -1,11 +1,12 @@
 pub mod background;
+pub mod colors;
 pub mod font_engine;
 pub mod passport;
 pub mod svg;
 
-use std::sync::mpsc::Receiver;
-
+use colors::*;
 use macroquad::prelude::*;
+use std::sync::mpsc::Receiver;
 
 use self::{font_engine::draw_text, passport::draw_passport};
 use crate::{enums::AuthState, timedvariable::TimedVariable};
@@ -15,22 +16,6 @@ use AuthState::*;
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
-
-const YELLOW_ACCENT: (u8, u8, u8) = (251, 203, 59);
-const BLACK_BG: (u8, u8, u8) = (10, 10, 10);
-const WHITE: (u8, u8, u8) = (255, 255, 255);
-
-fn yellow_accent(opacity: u8) -> Color {
-    Color::from_rgba(YELLOW_ACCENT.0, YELLOW_ACCENT.1, YELLOW_ACCENT.2, opacity)
-}
-
-fn black_bg(opacity: u8) -> Color {
-    Color::from_rgba(BLACK_BG.0, BLACK_BG.1, BLACK_BG.2, opacity)
-}
-
-fn white(opacity: u8) -> Color {
-    Color::from_rgba(WHITE.0, WHITE.1, WHITE.2, opacity)
-}
 
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
     source * (1.0 - percent) + destination * percent
