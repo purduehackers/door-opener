@@ -1,7 +1,7 @@
 mod lx16a;
 
 use std::{
-    sync::mpsc::{channel, Sender},
+    sync::mpsc::{Sender, channel},
     thread, time,
 };
 
@@ -24,12 +24,13 @@ impl Default for DoorOpener {
 impl DoorOpener {
     pub fn new() -> DoorOpener {
         let (tx, rx) = channel::<i32>();
-        let mut servo_controller = ServoController::new(DOOR_SERVO_SERIAL.to_string());
 
         thread::spawn(move || {
             loop {
                 match rx.try_recv() {
                     Ok(_x) => {
+                        let mut servo_controller =
+                            ServoController::new(DOOR_SERVO_SERIAL.to_string());
                         servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, 0);
 
                         thread::sleep(time::Duration::from_millis(1000));
