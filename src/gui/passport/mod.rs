@@ -36,7 +36,7 @@ pub async fn initialise_passport() -> PassportData {
     PassportData {
         logo_texture,
         loading_spinner_texture,
-        current_spinner_colour: yellow_accent(255),
+        current_spinner_colour: YELLOW_ACCENT(255),
         current_spinner_cutout_opacity: 0.0,
         current_x: 0.0,
         current_y: 0.0,
@@ -92,14 +92,14 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         passport_data.current_y - 360.0,
         720.0,
         720.0,
-        yellow_accent(255),
+        YELLOW_ACCENT(255),
     );
     draw_rectangle(
         passport_data.current_x - 350.0,
         passport_data.current_y - 350.0,
         700.0,
         700.0,
-        black_bg(255),
+        BLACK_BG(255),
     );
 
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
@@ -115,11 +115,11 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
     passport_data.current_spinner_colour = super::colour_lerp(
         passport_data.current_spinner_colour,
         match state {
-            AuthState::Idle => yellow_accent(255),
-            AuthState::Pending => yellow_accent(255),
+            AuthState::Idle => YELLOW_ACCENT(255),
+            AuthState::Pending => YELLOW_ACCENT(255),
             AuthState::Valid => GREEN_CL,
             AuthState::Invalid | AuthState::NetError | AuthState::NFCError => RED_CL,
-            _ => yellow_accent(255),
+            _ => YELLOW_ACCENT(255),
         },
         delta_time * 10.0,
     );
@@ -128,7 +128,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         &passport_data.logo_texture,
         passport_data.current_x - (passport_data.logo_texture.width() / 2.0),
         passport_data.current_y - (passport_data.logo_texture.height() / 2.0),
-        yellow_accent(255),
+        YELLOW_ACCENT(255),
     );
 
     let spinner_center_x =
