@@ -1,5 +1,6 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
 pub enum AuthState {
+    #[default]
     Idle,     // 0
     Pending,  // 1
     Valid,    // 2
