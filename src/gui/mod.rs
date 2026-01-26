@@ -12,8 +12,6 @@ use crate::{enums::AuthState, timedvariable::TimedVariable};
 
 use AuthState::*;
 
-// use crate::hardware::led::LEDController;
-
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
@@ -62,8 +60,6 @@ pub fn gui_entry(nfc_messages: Receiver<AuthState>) {
 }
 
 async fn gui_main(nfc_messages: Receiver<AuthState>) {
-    // let mut led_controller = LEDController::new();
-
     let mut queued_auth_state: (Option<AuthState>, bool) = (None, false);
     let mut animating_auth_state: TimedVariable<(Option<AuthState>, bool)> =
         TimedVariable::new((None, false));
@@ -102,8 +98,6 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
 
             if animating_auth_state.get().0.is_some() {
-                // led_controller.set_colour(animating_auth_state.get().0);
-
                 match animating_auth_state.get().0.unwrap() {
                     // Welcome screen
                     Idle => {
