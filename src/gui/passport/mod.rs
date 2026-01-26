@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 use super::svg;
 
+use super::colors::*;
 use crate::AuthState;
 
 const PASSPORT_EMBLEM: &[u8] = include_bytes!("../assets/passport-emblem.svg");
@@ -35,7 +36,7 @@ pub async fn initialise_passport() -> PassportData {
     PassportData {
         logo_texture,
         loading_spinner_texture,
-        current_spinner_colour: Color::from_hex(0xfbcb3b),
+        current_spinner_colour: yellow_accent(255),
         current_spinner_cutout_opacity: 0.0,
         current_x: 0.0,
         current_y: 0.0,
@@ -91,14 +92,14 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         passport_data.current_y - 360.0,
         720.0,
         720.0,
-        Color::from_hex(0xfbcb3b),
+        yellow_accent(255),
     );
     draw_rectangle(
         passport_data.current_x - 350.0,
         passport_data.current_y - 350.0,
         700.0,
         700.0,
-        Color::from_rgba(10, 10, 10, 255),
+        black_bg(255),
     );
 
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
@@ -114,13 +115,11 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
     passport_data.current_spinner_colour = super::colour_lerp(
         passport_data.current_spinner_colour,
         match state {
-            AuthState::Idle => Color::from_hex(0xfbcb3b), //yellow
-            AuthState::Pending => Color::from_hex(0xfbcb3b), //yellow
-            AuthState::Valid => Color::from_hex(0x22c55e), //green
-            AuthState::Invalid | AuthState::NetError | AuthState::NFCError => {
-                Color::from_hex(0xef4444) //  red
-            }
-            _ => Color::from_hex(0xfbcb3b), // yellow
+            AuthState::Idle => yellow_accent(255),
+            AuthState::Pending => yellow_accent(255),
+            AuthState::Valid => GREEN_CL,
+            AuthState::Invalid | AuthState::NetError | AuthState::NFCError => RED_CL,
+            _ => yellow_accent(255),
         },
         delta_time * 10.0,
     );
@@ -129,7 +128,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         &passport_data.logo_texture,
         passport_data.current_x - (passport_data.logo_texture.width() / 2.0),
         passport_data.current_y - (passport_data.logo_texture.height() / 2.0),
-        Color::from_hex(0xfbcb3b),
+        yellow_accent(255),
     );
 
     let spinner_center_x =
