@@ -23,8 +23,6 @@ jobs:
     runs-on: ${{ matrix.platform.runs-on }}
     steps:
       - uses: actions/checkout@v6
-      - name: Install system library dependencies
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v1
         with:
