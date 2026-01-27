@@ -1,5 +1,5 @@
 [target.aarch64-unknown-linux-gnu]
 pre-build = [
     "dpkg --add-architecture $CROSS_DEB_ARCH",
-    "apt-get update && apt-get install -y libudev-dev libnfc-dev"
+    "apt-get update && apt-get install -y libudev-dev libnfc-dev libclang-dev"
 ]
