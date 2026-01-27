@@ -1,0 +1,28 @@
+name: Rust build for aarch64
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install system library dependencies
+      run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev
+    - name: Build
+      run: cargo build --verbose --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v6
+      with:
+        name: door-opener-aarch64
+        path: target/aarch64-unknown-linux-gnu/release/door-opener
