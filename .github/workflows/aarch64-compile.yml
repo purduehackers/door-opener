@@ -24,5 +24,6 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v6
       with:
-        name: door-opener-aarch64
-        path: target/aarch64-unknown-linux-gnu/release/door-opener
+        name: door-opener
+        path: target/release/door-opener
+        if-no-files-found: error
