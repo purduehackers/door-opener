@@ -7,7 +7,7 @@ edition = "2024"
 
 [dependencies]
 macroquad = "0.4.14"
-resvg = "0.46.0"
+resvg = "0.47.0"
 serialport = "4.8.1"
 nfc1 = { version = "=0.6.0", default-features = false, features = [] }
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
