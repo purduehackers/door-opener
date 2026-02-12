@@ -25,8 +25,9 @@ fn main() {
     let (auth_tx, gui_rx) = channel::<AuthState>();
     let (opener_tx, opener_rx) = channel::<()>();
 
+    let auth_opener = opener_tx.clone();
     thread::spawn(|| {
-        auth_entry(auth_tx, opener_tx.clone());
+        auth_entry(auth_tx, auth_opener);
     });
 
     thread::spawn(|| {
