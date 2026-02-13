@@ -12,13 +12,9 @@ use std::{
 };
 
 use auth::auth_entry;
-use tungstenite::{Message, Utf8Bytes, connect};
+use tungstenite::{Message, connect};
 
-use crate::{
-    enums::AuthState,
-    gui::gui_entry,
-    hardware::door::{self, DoorOpener},
-};
+use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
 
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
 fn main() {

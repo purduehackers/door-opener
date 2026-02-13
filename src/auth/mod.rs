@@ -2,16 +2,12 @@ use std::{string::String, sync::mpsc::Sender, thread, time::Duration};
 
 use reqwest::{Error, StatusCode};
 
-use crate::{
-    enums::AuthState,
-    hardware::{door::DoorOpener, nfc::NFCReader},
-};
+use crate::{enums::AuthState, hardware::nfc::NFCReader};
 
 use AuthState::*;
 
 pub fn auth_entry(gui_sender: Sender<AuthState>, opener_tx: Sender<()>) {
     let mut nfc_reader: NFCReader = NFCReader::new().expect("Failed to initialize NFC reader");
-    let door_opener: DoorOpener = DoorOpener::new();
 
     loop {
         if let Ok(target) = nfc_reader.poll() {
