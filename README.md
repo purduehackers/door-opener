@@ -50,3 +50,11 @@ Install LLVM and CMake:
 winget install -e --id LLVM.LLVM
 winget install -e --id Kitware.CMake
 ```
+
+#### For macOS
+
+Install Homebrew, and then install the following dependencies:
+
+```
+brew install libnfc pkgconf
+```
