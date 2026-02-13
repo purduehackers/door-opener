@@ -1,6 +1,6 @@
 use macroquad::{
     color::Color,
-    text::{draw_text_ex, measure_text, Font, TextDimensions, TextParams},
+    text::{Font, TextDimensions, TextParams, draw_text_ex, measure_text},
 };
 
 pub struct Point {

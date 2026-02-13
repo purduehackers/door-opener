@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use nfc1::{target_info::TargetInfo, Context, Device, Error, Target};
+use nfc1::{Context, Device, Error, Target, target_info::TargetInfo};
 
 pub mod parser;
 pub mod structs;

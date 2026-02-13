@@ -59,9 +59,7 @@ impl ServoController {
 
         std::thread::sleep(std::time::Duration::from_millis(3000));
 
-        ServoController {
-            serial_port,
-        }
+        ServoController { serial_port }
     }
 
     fn _command(&mut self, servo_id: u8, command: u8, parameters: Vec<u8>) {
