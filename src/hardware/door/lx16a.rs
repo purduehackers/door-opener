@@ -1,4 +1,13 @@
+use std::{thread, time};
+
 use serialport::SerialPort;
+
+use crate::{
+    config::{
+        DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, DOOR_SERVO_RELEASED_POSITION, DOOR_SERVO_SERIAL,
+    },
+    hardware::door::OpenModule,
+};
 
 //pub const SERVO_ID_ALL: u8 = 0xfe;
 
@@ -343,4 +352,25 @@ impl ServoController {
 
     //     self._command(servo_id, SERVO_LED_ERROR_WRITE, vec![error]);
     // }
+}
+
+pub struct LX16A {
+    servo_controller: ServoController,
+}
+
+impl LX16A {
+    pub fn new() -> LX16A {
+        let servo_controller = ServoController::new(DOOR_SERVO_SERIAL.to_string());
+        LX16A { servo_controller }
+    }
+}
+
+impl OpenModule for LX16A {
+    fn open_door(&mut self) {
+        self.servo_controller
+            .move_now(DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, 0);
+        thread::sleep(time::Duration::from_millis(1000));
+        self.servo_controller
+            .move_now(DOOR_SERVO_ID, DOOR_SERVO_RELEASED_POSITION, 0);
+    }
 }
