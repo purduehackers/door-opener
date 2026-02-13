@@ -9,7 +9,7 @@ use macroquad::prelude::*;
 use std::sync::mpsc::Receiver;
 
 use self::{font_engine::draw_text, passport::draw_passport};
-use crate::{enums::AuthState, timedvariable::TimedVariable};
+use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVariable};
 
 use AuthState::*;
 
@@ -276,8 +276,7 @@ fn draw_welcome_window(
 
     let _ = draw_text(
         "Welcome to Hack Night",
-        32.0,
-        203.0,
+        Point::new(32.0, 203.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -286,8 +285,7 @@ fn draw_welcome_window(
     );
     let _ = draw_text(
         "Scan your passport to start",
-        32.0,
-        422.0,
+        Point::new(32.0, 422.0),
         500.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -332,8 +330,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
 
     let _ = draw_text(
         "Welcome back!",
-        32.0,
-        251.0,
+        Point::new(32.0, 251.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -342,8 +339,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
     );
     let _ = draw_text(
         "Please be mindful of the door opening",
-        32.0,
-        374.0,
+        Point::new(32.0, 374.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -359,8 +355,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
 
     let _ = draw_text(
         "Invalid Passport!",
-        32.0,
-        179.0,
+        Point::new(32.0, 179.0),
         420.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -369,8 +364,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
     );
     let _ = draw_text(
         "Please try again or scan the QR code to ring the doorbell manually!",
-        32.0,
-        398.0,
+        Point::new(32.0, 398.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -401,8 +395,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
 
     let _ = draw_text(
         "Something went wrong!",
-        32.0,
-        179.0,
+        Point::new(32.0, 179.0),
         420.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -411,8 +404,7 @@ fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
     );
     let _ = draw_text(
         "We're having connectivity issues at the moment. Please try again.",
-        32.0,
-        398.0,
+        Point::new(32.0, 398.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -443,8 +435,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
 
     let _ = draw_text(
         "NFC read error!",
-        32.0,
-        179.0,
+        Point::new(32.0, 179.0),
         420.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -453,8 +444,7 @@ fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
     );
     let _ = draw_text(
         "Please take away your passport, then hold it still during the scan!",
-        32.0,
-        398.0,
+        Point::new(32.0, 398.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,

@@ -17,11 +17,11 @@ impl<T: Copy> TimedVariable<T> {
     pub fn check_for_updates(&mut self, current_time: f64) {
         self.last_time_step = current_time;
 
-        if let Some(current_check) = &self.next_value {
-            if (current_time - current_check.1) >= current_check.2 {
-                self.current_value = current_check.0;
-                self.next_value = Option::None;
-            }
+        if let Some(current_check) = &self.next_value
+            && (current_time - current_check.1) >= current_check.2
+        {
+            self.current_value = current_check.0;
+            self.next_value = Option::None;
         }
     }
 

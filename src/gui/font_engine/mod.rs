@@ -3,18 +3,28 @@ use macroquad::{
     text::{draw_text_ex, measure_text, Font, TextDimensions, TextParams},
 };
 
-// if it comes to it, we can make a more advanced font rendering engine but this will do for now
-
-pub fn draw_text(
-    text: &str,
+pub struct Point {
     x: f32,
     y: f32,
+}
+
+impl Point {
+    pub fn new(x: f32, y: f32) -> Self {
+        Point { x, y }
+    }
+}
+
+// if it comes to it, we can make a more advanced font rendering engine but this will do for now
+pub fn draw_text(
+    text: &str,
+    point: Point,
     width: f32,
     colour: Color,
     font: &Font,
     font_size: u16,
     line_height: f32,
 ) -> TextDimensions {
+    let Point { x, y } = point;
     let space_dimensions = measure_text(" ", Some(font), font_size, 1.0);
 
     let line_height: f32 = (0.125 * (font_size as f32)) + (line_height * 10.0);

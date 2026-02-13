@@ -69,7 +69,7 @@ fn ws_entry(opener_tx: Sender<()>) {
     while let Ok(msg) = socket.read() {
         match msg {
             Message::Text(t) => {
-                if let Ok(msg) = serde_json::from_str(&t.to_string()) {
+                if let Ok(msg) = serde_json::from_str(t.as_ref()) {
                     match msg {
                         WebSocketMessage::Open => {
                             let _ = opener_tx.send(());
