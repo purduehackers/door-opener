@@ -1,1 +1,5 @@
 /target
+
+
+# Ignore environment variables
+.env
