@@ -1,4 +1,4 @@
-use std::{thread, time};
+use std::{error::Error, thread, time};
 
 use serialport::SerialPort;
 
@@ -366,11 +366,12 @@ impl LX16A {
 }
 
 impl OpenModule for LX16A {
-    fn open_door(&mut self) {
+    async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
         self.servo_controller
             .move_now(DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, 0);
         thread::sleep(time::Duration::from_millis(1000));
         self.servo_controller
             .move_now(DOOR_SERVO_ID, DOOR_SERVO_RELEASED_POSITION, 0);
+        Ok(())
     }
 }
