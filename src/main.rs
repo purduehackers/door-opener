@@ -20,8 +20,9 @@ use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
 fn main() {
     let (auth_tx, gui_rx) = channel::<AuthState>();
     let (opener_tx, opener_rx) = channel::<()>();
-
     let auth_opener = opener_tx.clone();
+    let gui_opener = opener_tx.clone();
+
     thread::spawn(|| {
         auth_entry(auth_tx, auth_opener);
     });
@@ -34,7 +35,7 @@ fn main() {
         opener_entry(opener_rx);
     });
 
-    gui_entry(gui_rx);
+    gui_entry(gui_rx, gui_opener);
 }
 
 fn opener_entry(opener_rx: Receiver<()>) {

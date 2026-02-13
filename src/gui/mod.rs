@@ -6,7 +6,7 @@ pub mod svg;
 
 use colors::*;
 use macroquad::prelude::*;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, Sender};
 
 use self::{font_engine::draw_text, passport::draw_passport};
 use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVariable};
@@ -29,7 +29,7 @@ pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
     }
 }
 
-pub fn gui_entry(nfc_messages: Receiver<AuthState>) {
+pub fn gui_entry(nfc_messages: Receiver<AuthState>, opener_tx: Sender<()>) {
     macroquad::Window::from_config(
         Conf {
             window_title: "Door Opener".to_owned(),
@@ -40,11 +40,11 @@ pub fn gui_entry(nfc_messages: Receiver<AuthState>) {
             sample_count: 0,
             ..Default::default()
         },
-        gui_main(nfc_messages),
+        gui_main(nfc_messages, opener_tx),
     )
 }
 
-async fn gui_main(nfc_messages: Receiver<AuthState>) {
+async fn gui_main(nfc_messages: Receiver<AuthState>, opener_tx: Sender<()>) {
     let mut queued_auth_state: (Option<AuthState>, bool) = (None, false);
     let mut animating_auth_state: TimedVariable<(Option<AuthState>, bool)> =
         TimedVariable::new((None, false));
@@ -255,6 +255,13 @@ async fn gui_main(nfc_messages: Receiver<AuthState>) {
             auth_state.get(),
             &mut passport_data,
         );
+        
+        #[cfg(debug_assertions)]
+        if is_key_pressed(KeyCode::Space) {
+            println!("Opening door for debugging purposes...");
+            queued_auth_state = (Some(Valid), true);
+            let _ = opener_tx.send(());
+        }
 
         if is_key_down(KeyCode::Escape) {
             return;
