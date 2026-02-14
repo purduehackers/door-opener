@@ -17,7 +17,7 @@ use tungstenite::{Message, connect};
 use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
 
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
-#[tokio::main(flavor = "multi_thread", worker_threads = 6)]
+#[tokio::main]
 async fn main() {
     let (auth_tx, gui_rx) = unbounded_channel::<AuthState>();
     let (opener_tx, opener_rx) = unbounded_channel::<()>();
