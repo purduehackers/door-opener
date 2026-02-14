@@ -6,7 +6,6 @@ pub mod svg;
 
 use colors::*;
 use macroquad::prelude::*;
-use std::sync::mpsc::{Receiver, Sender};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use self::{font_engine::draw_text, passport::draw_passport};
