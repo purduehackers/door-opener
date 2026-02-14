@@ -5,11 +5,7 @@ pub mod gui;
 pub mod hardware;
 pub mod timedvariable;
 
-use std::{
-    env,
-    sync::mpsc::{Receiver, Sender, channel},
-    thread,
-};
+use std::env;
 
 use auth::auth_entry;
 use tokio::{
