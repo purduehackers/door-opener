@@ -1,6 +1,5 @@
 use std::collections::BTreeSet;
 use std::error::Error;
-use std::thread;
 use std::time::Duration;
 
 use btleplug::api::{
@@ -8,6 +7,7 @@ use btleplug::api::{
 };
 use btleplug::platform::{Adapter, Peripheral};
 use btleplug::{api::bleuuid::uuid_from_u16, platform::Manager};
+use tokio::time;
 use uuid::Uuid;
 
 use crate::hardware::door::OpenModule;
@@ -30,7 +30,7 @@ impl AdaPusher {
 
         central.start_scan(ScanFilter::default()).await?;
         println!("Scanning for BLE devices...");
-        thread::sleep(Duration::from_secs(10));
+        time::sleep(Duration::from_secs(10)).await;
 
         let device = Self::find_ada_pusher_device(&central)
             .await
