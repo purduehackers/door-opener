@@ -6,10 +6,10 @@ use async_trait::async_trait;
 use btleplug::api::{
     Central, Characteristic, Manager as _, Peripheral as _, ScanFilter, WriteType,
 };
+use btleplug::platform::Manager;
 use btleplug::platform::{Adapter, Peripheral};
-use btleplug::{api::bleuuid::uuid_from_u16, platform::Manager};
 use tokio::time;
-use uuid::Uuid;
+use uuid::{Uuid, uuid};
 
 use crate::hardware::door::OpenModule;
 
@@ -18,8 +18,8 @@ pub struct AdaPusher {
     chars: BTreeSet<Characteristic>,
 }
 
-const ADA_PUSHER_UUID: Uuid = uuid_from_u16(0xADAD);
-const ADA_PUSHER_COMMAND_UUID: Uuid = uuid_from_u16(0xADAE);
+//const ADA_PUSHER_UUID: Uuid = uuid_from_u16(0xADAD);
+const ADA_PUSHER_COMMAND_UUID: Uuid = uuid!("7e783540-f3ab-431f-adff-566767b8bb31");
 
 impl AdaPusher {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
