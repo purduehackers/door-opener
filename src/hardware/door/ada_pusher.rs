@@ -13,7 +13,6 @@ use uuid::Uuid;
 use crate::hardware::door::OpenModule;
 
 pub struct AdaPusher {
-    manager: Manager,
     device: Peripheral,
     chars: BTreeSet<Characteristic>,
 }
@@ -41,11 +40,7 @@ impl AdaPusher {
 
         let chars = device.characteristics();
 
-        Ok(AdaPusher {
-            manager,
-            device,
-            chars,
-        })
+        Ok(AdaPusher { device, chars })
     }
 
     fn get_cmd_char(&self) -> Result<&Characteristic, Box<dyn Error + Send + Sync>> {
