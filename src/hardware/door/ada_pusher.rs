@@ -23,7 +23,6 @@ const ADA_PUSHER_COMMAND_UUID: Uuid = uuid!("7e783540-f3ab-431f-adff-566767b8bb3
 
 impl AdaPusher {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
-        println!("Initializing...");
         let manager = Manager::new().await?;
         let adapters = manager.adapters().await?;
         let central = adapters.into_iter().nth(0).unwrap();

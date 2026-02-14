@@ -53,9 +53,6 @@ impl DoorOpener {
                 };
             }
         });
-
-        println!("returning tx");
-
         Self { tx }
     }
 
