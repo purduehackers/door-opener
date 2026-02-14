@@ -71,10 +71,12 @@ impl AdaPusher {
 
 impl OpenModule for AdaPusher {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
+        println!("someone says open sesame, sending command over BLE...");
         let open_cmd = vec![0x6F, 0x70, 0x65, 0x6E];
         self.device
             .write(self.get_cmd_char()?, &open_cmd, WriteType::WithoutResponse)
             .await?;
+        println!("door opening, yay!");
         Ok(())
     }
 }
