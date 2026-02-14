@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install system library dependencies
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev libdbus-1-dev
       - name: Enable caching
         uses: Swatinem/rust-cache@v2
       - name: Run command
