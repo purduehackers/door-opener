@@ -6,8 +6,8 @@ pub mod svg;
 
 use colors::*;
 use macroquad::prelude::*;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use std::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use self::{font_engine::draw_text, passport::draw_passport};
 use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVariable};
@@ -255,7 +255,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             auth_state.get(),
             &mut passport_data,
         );
-        
+
         #[cfg(debug_assertions)]
         if is_key_pressed(KeyCode::Space) {
             println!("Opening door for debugging purposes...");
