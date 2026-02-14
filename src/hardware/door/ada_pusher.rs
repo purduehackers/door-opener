@@ -33,7 +33,7 @@ impl AdaPusher {
 
         let device = Self::find_ada_pusher_device(&central)
             .await
-            .ok_or_else(|| "ada-pusher not found during scan")?;
+            .ok_or("ada-pusher not found during scan")?;
 
         device.connect().await?;
         device.discover_services().await?;

@@ -40,9 +40,8 @@ async fn main() {
 async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
     let door_opener = DoorOpener::new().await;
     loop {
-        match opener_rx.recv().await {
-            Some(_) => door_opener.open(),
-            None => {}
+        if let Some(_) = opener_rx.recv().await {
+            door_opener.open()
         }
     }
 }
