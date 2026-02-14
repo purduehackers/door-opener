@@ -56,7 +56,10 @@ impl AdaPusher {
             println!("peripheral in!");
             let local_names = p.properties().await.unwrap().unwrap().local_name;
             println!("local names: {:?}", local_names);
-            if local_names.iter().any(|name| name.contains("ada-pusher") || name.contains("nimble")) {
+            if local_names
+                .iter()
+                .any(|name| name.contains("ada-pusher") || name.contains("nimble"))
+            {
                 return Some(p);
             }
         }
