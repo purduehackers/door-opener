@@ -12,7 +12,10 @@ use std::{
 };
 
 use auth::auth_entry;
-use tokio::{sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel}, task};
+use tokio::{
+    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+    task,
+};
 use tungstenite::{Message, connect};
 
 use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
@@ -43,7 +46,7 @@ async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
     loop {
         match opener_rx.recv().await {
             Some(_) => door_opener.open(),
-            None => {},
+            None => {}
         }
     }
 }
@@ -66,6 +69,7 @@ fn ws_entry(opener_tx: UnboundedSender<()>) {
         .expect("write auth");
 
     #[derive(Debug, serde::Deserialize)]
+    #[serde(tag = "type")]
     enum WebSocketMessage {
         Open,
     }
