@@ -54,9 +54,7 @@ impl AdaPusher {
 
     async fn find_ada_pusher_device(central: &Adapter) -> Option<Peripheral> {
         for p in central.peripherals().await.unwrap() {
-            println!("peripheral in!");
             let local_names = p.properties().await.unwrap().unwrap().local_name;
-            println!("local names: {:?}", local_names);
             if local_names
                 .iter()
                 .any(|name| name.contains("ada-pusher") || name.contains("nimble"))
@@ -71,12 +69,12 @@ impl AdaPusher {
 #[async_trait]
 impl OpenModule for AdaPusher {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
-        println!("someone says open sesame, sending command over BLE...");
+        println!("Sending open command over BLE...");
         let open_cmd = vec![0x6F, 0x70, 0x65, 0x6E];
         self.device
             .write(self.get_cmd_char()?, &open_cmd, WriteType::WithoutResponse)
             .await?;
-        println!("door opening, yay!");
+        println!("Command sent over BLE!");
         Ok(())
     }
 }

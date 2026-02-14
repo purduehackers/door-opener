@@ -25,10 +25,8 @@ impl DoorOpener {
         // this seems wrong, if buffer capacity is 1 then we should prolly use oneshot?
         // TODO: change
         let (tx, mut rx) = unbounded_channel::<()>();
-        println!("new door opener");
 
         task::spawn(async move {
-            println!("got to inner task spawn");
             let mut module: Box<dyn OpenModule + Send> = if cfg!(feature = "ada_pusher") {
                 Box::new(
                     AdaPusher::new()
@@ -42,7 +40,6 @@ impl DoorOpener {
             loop {
                 match rx.recv().await {
                     Some(_) => {
-                        println!("received req");
                         match module.open_door().await {
                             Ok(_) => (),
                             Err(_) => {
