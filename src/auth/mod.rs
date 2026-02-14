@@ -1,12 +1,13 @@
-use std::{string::String, sync::mpsc::Sender, thread, time::Duration};
+use std::{string::String, thread, time::Duration};
 
 use reqwest::{Error, StatusCode};
+use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{enums::AuthState, hardware::nfc::NFCReader};
 
 use AuthState::*;
 
-pub fn auth_entry(gui_sender: Sender<AuthState>, opener_tx: Sender<()>) {
+pub fn auth_entry(gui_sender: UnboundedSender<AuthState>, opener_tx: UnboundedSender<()>) {
     let mut nfc_reader: NFCReader = NFCReader::new().expect("Failed to initialize NFC reader");
 
     loop {

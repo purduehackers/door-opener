@@ -1,54 +1,60 @@
+mod ada_pusher;
 mod lx16a;
 
-use std::{
-    sync::mpsc::{Sender, channel},
-    thread, time,
+use std::error::Error;
+
+use tokio::{
+    sync::mpsc::{UnboundedSender, unbounded_channel},
+    task,
 };
 
-use crate::config::{
-    DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, DOOR_SERVO_RELEASED_POSITION, DOOR_SERVO_SERIAL,
-};
-
-use self::lx16a::ServoController;
+use crate::hardware::door::ada_pusher::AdaPusher;
 
 pub struct DoorOpener {
-    tx: Sender<i32>,
+    tx: UnboundedSender<()>,
 }
 
-impl Default for DoorOpener {
-    fn default() -> Self {
-        Self::new()
-    }
+trait OpenModule {
+    async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 
 impl DoorOpener {
-    pub fn new() -> DoorOpener {
-        let (tx, rx) = channel::<i32>();
+    pub async fn new() -> DoorOpener {
+        // this seems wrong, if buffer capacity is 1 then we should prolly use oneshot?
+        // TODO: change
+        let (tx, mut rx) = unbounded_channel::<()>();
+        println!("new door opener");
 
-        thread::spawn(move || {
+        task::spawn(async move {
+            println!("got to inner task spawn");
+            let mut module = AdaPusher::new()
+                .await
+                .expect("Failed to initialize ada-pusher");
+
             loop {
-                match rx.try_recv() {
-                    Ok(_x) => {
-                        let mut servo_controller =
-                            ServoController::new(DOOR_SERVO_SERIAL.to_string());
-                        servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_PRESSED_POSITION, 0);
-
-                        thread::sleep(time::Duration::from_millis(1000));
-
-                        servo_controller.move_now(DOOR_SERVO_ID, DOOR_SERVO_RELEASED_POSITION, 0);
+                match rx.recv().await {
+                    Some(_) => {
+                        println!("received req");
+                        match module.open_door().await {
+                            Ok(_) => (),
+                            Err(_) => {
+                                // TODO: display error somehow later, figure it out
+                            }
+                        }
                     }
-                    Err(std::sync::mpsc::TryRecvError::Empty) => (),
-                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    None => {
                         // probably display the error message somehow
                     }
                 };
             }
         });
 
+        println!("returning tx");
+
         Self { tx }
     }
 
     pub fn open(&self) {
-        let _ = self.tx.send(1);
+        let _ = self.tx.send(());
     }
 }

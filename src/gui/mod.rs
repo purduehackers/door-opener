@@ -6,6 +6,7 @@ pub mod svg;
 
 use colors::*;
 use macroquad::prelude::*;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use std::sync::mpsc::{Receiver, Sender};
 
 use self::{font_engine::draw_text, passport::draw_passport};
@@ -29,7 +30,7 @@ pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
     }
 }
 
-pub fn gui_entry(nfc_messages: Receiver<AuthState>, opener_tx: Sender<()>) {
+pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: UnboundedSender<()>) {
     macroquad::Window::from_config(
         Conf {
             window_title: "Door Opener".to_owned(),
@@ -44,7 +45,7 @@ pub fn gui_entry(nfc_messages: Receiver<AuthState>, opener_tx: Sender<()>) {
     )
 }
 
-async fn gui_main(nfc_messages: Receiver<AuthState>, opener_tx: Sender<()>) {
+async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: UnboundedSender<()>) {
     let mut queued_auth_state: (Option<AuthState>, bool) = (None, false);
     let mut animating_auth_state: TimedVariable<(Option<AuthState>, bool)> =
         TimedVariable::new((None, false));
@@ -155,8 +156,7 @@ async fn gui_main(nfc_messages: Receiver<AuthState>, opener_tx: Sender<()>) {
             Ok(x) => {
                 queued_auth_state = (Some(x), true);
             }
-            Err(std::sync::mpsc::TryRecvError::Empty) => (),
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+            Err(_) => {
                 // probably display the error message somehow
             }
         };

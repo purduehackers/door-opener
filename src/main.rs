@@ -12,40 +12,43 @@ use std::{
 };
 
 use auth::auth_entry;
+use tokio::{sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel}, task};
 use tungstenite::{Message, connect};
 
 use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
 
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
-fn main() {
-    let (auth_tx, gui_rx) = channel::<AuthState>();
-    let (opener_tx, opener_rx) = channel::<()>();
+#[tokio::main(flavor = "multi_thread", worker_threads = 6)]
+async fn main() {
+    let (auth_tx, gui_rx) = unbounded_channel::<AuthState>();
+    let (opener_tx, opener_rx) = unbounded_channel::<()>();
     let auth_opener = opener_tx.clone();
     let gui_opener = opener_tx.clone();
 
-    thread::spawn(|| {
+    task::spawn(async {
         auth_entry(auth_tx, auth_opener);
     });
 
-    thread::spawn(|| {
+    task::spawn(async {
         ws_entry(opener_tx);
     });
 
-    thread::spawn(|| {
-        opener_entry(opener_rx);
-    });
+    task::spawn(opener_entry(opener_rx));
 
     gui_entry(gui_rx, gui_opener);
 }
 
-fn opener_entry(opener_rx: Receiver<()>) {
-    let door_opener = DoorOpener::new();
-    while opener_rx.recv().is_ok() {
-        door_opener.open();
+async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
+    let door_opener = DoorOpener::new().await;
+    loop {
+        match opener_rx.recv().await {
+            Some(_) => door_opener.open(),
+            None => {},
+        }
     }
 }
 
-fn ws_entry(opener_tx: Sender<()>) {
+fn ws_entry(opener_tx: UnboundedSender<()>) {
     let (mut socket, _resp) = match connect("wss://api.purduehackers.com/phonebell/door-opener") {
         Ok(x) => x,
         Err(e) => {
