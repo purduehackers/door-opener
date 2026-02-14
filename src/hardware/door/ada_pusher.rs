@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 use std::error::Error;
 use std::time::Duration;
 
+use async_trait::async_trait;
 use btleplug::api::{
     Central, Characteristic, Manager as _, Peripheral as _, ScanFilter, WriteType,
 };
@@ -67,6 +68,7 @@ impl AdaPusher {
     }
 }
 
+#[async_trait]
 impl OpenModule for AdaPusher {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
         println!("someone says open sesame, sending command over BLE...");

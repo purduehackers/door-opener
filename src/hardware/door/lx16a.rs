@@ -1,5 +1,6 @@
 use std::{error::Error, thread, time};
 
+use async_trait::async_trait;
 use serialport::SerialPort;
 
 use crate::{
@@ -365,6 +366,7 @@ impl LX16A {
     }
 }
 
+#[async_trait]
 impl OpenModule for LX16A {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
         self.servo_controller

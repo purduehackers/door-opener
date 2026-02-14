@@ -3,17 +3,19 @@ mod lx16a;
 
 use std::error::Error;
 
+use async_trait::async_trait;
 use tokio::{
     sync::mpsc::{UnboundedSender, unbounded_channel},
     task,
 };
 
-use crate::hardware::door::ada_pusher::AdaPusher;
+use crate::hardware::door::{ada_pusher::AdaPusher, lx16a::LX16A};
 
 pub struct DoorOpener {
     tx: UnboundedSender<()>,
 }
 
+#[async_trait]
 trait OpenModule {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
@@ -27,9 +29,15 @@ impl DoorOpener {
 
         task::spawn(async move {
             println!("got to inner task spawn");
-            let mut module = AdaPusher::new()
-                .await
-                .expect("Failed to initialize ada-pusher");
+            let mut module: Box<dyn OpenModule + Send> = if cfg!(feature = "ada_pusher") {
+                Box::new(
+                    AdaPusher::new()
+                        .await
+                        .expect("Failed to initialize ada-pusher"),
+                )
+            } else {
+                Box::new(LX16A::new())
+            };
 
             loop {
                 match rx.recv().await {
