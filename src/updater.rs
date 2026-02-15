@@ -11,7 +11,7 @@ use serde_json::Value;
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 /// Checks and performs updates, returns true if an update was performed
-async fn update_check() -> bool {
+pub async fn update_check() -> bool {
     // Get the latest release on GitHub
     let latest_version = Version::parse(
         get_latest_version()
