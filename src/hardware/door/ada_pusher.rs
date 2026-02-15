@@ -50,7 +50,7 @@ impl AdaPusher {
             .chars
             .iter()
             .find(|c| ADA_PUSHER_COMMAND_UUID == c.uuid)
-            .ok_or_else(|| "failed to find command characteristic")?)
+            .ok_or("failed to find command characteristic")?)
     }
 
     async fn find_ada_pusher_device(central: &Adapter) -> Option<Peripheral> {
