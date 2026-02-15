@@ -15,13 +15,13 @@ use tokio::{
 };
 use tungstenite::{Message, connect};
 
-use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
+use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener, updater::update_check};
 
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
 #[tokio::main]
 async fn main() {
     #[cfg(not(debug_assertions))]
-    if update_check() {
+    if update_check().await {
         // Quit, systemd will pick us back up
         return;
     }
