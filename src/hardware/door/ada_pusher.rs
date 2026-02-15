@@ -71,7 +71,7 @@ impl AdaPusher {
 impl OpenModule for AdaPusher {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
         println!("Sending open command over BLE...");
-        let open_cmd = vec![0x6F, 0x70, 0x65, 0x6E];
+        let open_cmd = b"open".to_vec();
         self.device
             .write(self.get_cmd_char()?, &open_cmd, WriteType::WithoutResponse)
             .await?;
