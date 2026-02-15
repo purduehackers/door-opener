@@ -8,14 +8,14 @@ edition = "2024"
 [dependencies]
 macroquad = "0.4.14"
 resvg = "0.47.0"
-serialport = "4.8.1"
+serialport = { version = "4.8.1", optional = true }
 nfc1 = { version = "=0.6.0", default-features = false, features = [] }
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 tungstenite = { version = "0.28.0", features = ["rustls-tls-webpki-roots"] }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-btleplug = "0.11.8"
+btleplug = { version = "0.11.8", optional = true }
 uuid = "1.20.0"
 tokio = { version = "1.49.0", features = ["rt", "macros", "rt-multi-thread"] }
 async-trait = "0.1.89"
@@ -27,5 +27,5 @@ nfc1 = { version = "=0.6.0", default-features=false, features = [ "vendored" ] }
 
 [features]
 default = ["ada_pusher"]
-ada_pusher = []
-lx16a = []
+ada_pusher = ["dep:btleplug"]
+lx16a = ["dep:serialport"]
