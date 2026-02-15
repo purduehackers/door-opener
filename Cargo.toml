@@ -9,7 +9,7 @@ edition = "2024"
 macroquad = "0.4.14"
 resvg = "0.47.0"
 serialport = "4.8.1"
-nfc1 = { version = "=0.6.0", default-features = false, features = [] }
+nfc1 = { version = "=0.7.0", default-features = false, features = [] }
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 tungstenite = { version = "0.28.0", features = ["rustls-tls-webpki-roots"] }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
@@ -22,7 +22,7 @@ async-trait = "0.1.89"
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
-nfc1 = { version = "=0.6.0", default-features=false, features = [ "vendored" ] }
+nfc1 = { version = "=0.7.0", default-features=false, features = [ "vendored" ] }
 
 [features]
 default = ["ada_pusher"]
