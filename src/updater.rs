@@ -1,3 +1,5 @@
+#![cfg(not(debug_assertions))]
+
 use std::env;
 
 use std::error::Error;

@@ -4,6 +4,7 @@ pub mod enums;
 pub mod gui;
 pub mod hardware;
 pub mod timedvariable;
+#[cfg(not(debug_assertions))]
 mod updater;
 
 use std::env;
@@ -15,7 +16,10 @@ use tokio::{
 };
 use tungstenite::{Message, connect};
 
-use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener, updater::update_check};
+use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
+
+#[cfg(not(debug_assertions))]
+use updater::update_check;
 
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
 #[tokio::main]
