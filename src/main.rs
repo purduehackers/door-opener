@@ -4,6 +4,7 @@ pub mod enums;
 pub mod gui;
 pub mod hardware;
 pub mod timedvariable;
+mod updater;
 
 use std::env;
 
@@ -19,6 +20,12 @@ use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
 #[tokio::main]
 async fn main() {
+    #[cfg(not(debug_assertions))]
+    if update_check() {
+        // Quit, systemd will pick us back up
+        return;
+    }
+
     let (auth_tx, gui_rx) = unbounded_channel::<AuthState>();
     let (opener_tx, opener_rx) = unbounded_channel::<()>();
     let auth_opener = opener_tx.clone();
