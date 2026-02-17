@@ -21,9 +21,6 @@ jobs:
         run: rustup target add aarch64-unknown-linux-musl
       - name: Build
         run: cargo build --verbose --release --target aarch64-unknown-linux-musl
-        env:
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
-          CC: aarch64-linux-gnu-gcc
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
