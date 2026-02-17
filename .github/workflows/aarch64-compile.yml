@@ -17,8 +17,6 @@ jobs:
       - uses: actions/checkout@v6
       - name: Install system library dependencies
         run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev libdbus-1-dev
-      - name: Add musl target
-        run: rustup target add aarch64-unknown-linux-musl
       - name: Build
         run: cargo build --verbose --release --target aarch64-unknown-linux-musl
       - name: Release
