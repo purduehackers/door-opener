@@ -1,4 +1,6 @@
+#[cfg(feature = "ada_pusher")]
 mod ada_pusher;
+#[cfg(feature = "lx16a")]
 mod lx16a;
 
 use std::error::Error;
