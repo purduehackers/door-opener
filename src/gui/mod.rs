@@ -186,9 +186,27 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             &doorbell_qr_pointer,
         );
         draw_accepted_window(accepted_opacity as u8, &segoe_ui);
-        draw_rejected_window(rejected_opacity as u8, &segoe_ui, &doorbell_qr);
-        draw_net_error_window(net_error_opacity as u8, &segoe_ui, &doorbell_qr);
-        draw_nfc_error_window(nfc_error_opacity as u8, &segoe_ui, &doorbell_qr);
+        draw_error_window(
+            rejected_opacity as u8,
+            &segoe_ui,
+            &doorbell_qr,
+            "Invalid Passport!",
+            "Please try again or scan the QR code to ring the doorbell manually!",
+        );
+        draw_error_window(
+            net_error_opacity as u8,
+            &segoe_ui,
+            &doorbell_qr,
+            "Something went wrong!",
+            "We're having connectivity issues at the moment. Please try again.",
+        );
+        draw_error_window(
+            nfc_error_opacity as u8,
+            &segoe_ui,
+            &doorbell_qr,
+            "NFC read error!",
+            "Please take away your passport, then hold it still during the scan!",
+        );
 
         draw_passport(
             360.0,
@@ -301,13 +319,19 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
     );
 }
 
-fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
+fn draw_error_window(
+    opacity: u8,
+    font: &Font,
+    doorbell_qr: &Texture2D,
+    title: &str,
+    subtitle: &str,
+) {
     draw_rectangle(0.0, 140.0, 720.0, 440.0, BLACK_BG(opacity));
     draw_rectangle(0.0, 140.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
     draw_rectangle(0.0, 576.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
 
     let _ = draw_text(
-        "Invalid Passport!",
+        title,
         Point::new(32.0, 179.0),
         420.0,
         YELLOW_ACCENT(opacity),
@@ -316,87 +340,7 @@ fn draw_rejected_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
         1.0,
     );
     let _ = draw_text(
-        "Please try again or scan the QR code to ring the doorbell manually!",
-        Point::new(32.0, 398.0),
-        648.0,
-        YELLOW_ACCENT(opacity),
-        font,
-        48,
-        1.0,
-    );
-
-    draw_texture_ex(
-        doorbell_qr,
-        500.0,
-        179.0,
-        WHITE_CL(opacity),
-        DrawTextureParams {
-            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
-            source: Option::None,
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: Option::None,
-        },
-    );
-}
-
-fn draw_net_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
-    draw_rectangle(0.0, 140.0, 720.0, 440.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 140.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 576.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-
-    let _ = draw_text(
-        "Something went wrong!",
-        Point::new(32.0, 179.0),
-        420.0,
-        YELLOW_ACCENT(opacity),
-        font,
-        96,
-        1.0,
-    );
-    let _ = draw_text(
-        "We're having connectivity issues at the moment. Please try again.",
-        Point::new(32.0, 398.0),
-        648.0,
-        YELLOW_ACCENT(opacity),
-        font,
-        48,
-        1.0,
-    );
-
-    draw_texture_ex(
-        doorbell_qr,
-        500.0,
-        179.0,
-        WHITE_CL(opacity),
-        DrawTextureParams {
-            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
-            source: Option::None,
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: Option::None,
-        },
-    );
-}
-
-fn draw_nfc_error_window(opacity: u8, font: &Font, doorbell_qr: &Texture2D) {
-    draw_rectangle(0.0, 140.0, 720.0, 440.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 140.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 576.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-
-    let _ = draw_text(
-        "NFC read error!",
-        Point::new(32.0, 179.0),
-        420.0,
-        YELLOW_ACCENT(opacity),
-        font,
-        96,
-        1.0,
-    );
-    let _ = draw_text(
-        "Please take away your passport, then hold it still during the scan!",
+        subtitle,
         Point::new(32.0, 398.0),
         648.0,
         YELLOW_ACCENT(opacity),
