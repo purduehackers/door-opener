@@ -113,7 +113,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         active_message.check_for_updates(check_time);
 
         if animating_auth_state.get().triggered {
-            animating_auth_state.set(AnimationEvent { triggered: false, ..animating_auth_state.get() }, -1.0);
+            animating_auth_state.set(
+                AnimationEvent {
+                    triggered: false,
+                    ..animating_auth_state.get()
+                },
+                -1.0,
+            );
 
             if let Some(anim_state) = animating_auth_state.get().state {
                 match anim_state {
@@ -122,7 +128,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
                         auth_state.set(AuthState::Idle, -1.0);
                         show_welcome.set(true, -1.0);
 
-                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 1.0);
+                        animating_auth_state.set(
+                            AnimationEvent {
+                                state: None,
+                                triggered: true,
+                            },
+                            1.0,
+                        );
                     }
                     // Loading screen
                     Pending => {
@@ -130,7 +142,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
                         active_message.set(0, -1.0);
 
                         auth_state.set(AuthState::Pending, 0.5);
-                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 1.5); // after previous + 1.0s
+                        animating_auth_state.set(
+                            AnimationEvent {
+                                state: None,
+                                triggered: true,
+                            },
+                            1.5,
+                        ); // after previous + 1.0s
                     }
                     // Verified passport screen
                     Valid => {
@@ -139,7 +157,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 6.5); // after welcome + 5.0s
-                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after welcome + 0.5s
+                        animating_auth_state.set(
+                            AnimationEvent {
+                                state: None,
+                                triggered: true,
+                            },
+                            2.0,
+                        ); // after welcome + 0.5s
                     }
                     // Error screens (Invalid, NetError, NFCError)
                     Invalid | NetError | NFCError => {
@@ -154,7 +178,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after previous + 0.5s
+                        animating_auth_state.set(
+                            AnimationEvent {
+                                state: None,
+                                triggered: true,
+                            },
+                            2.0,
+                        ); // after previous + 0.5s
                     }
                 }
             }
@@ -162,11 +192,23 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
         if animating_auth_state.get().triggered || queued_auth_state.triggered {
             // i think i fixed it // if animations progress too fast, this is probably the problem lmao
-            animating_auth_state.set(AnimationEvent { triggered: false, ..animating_auth_state.get() }, -1.0);
+            animating_auth_state.set(
+                AnimationEvent {
+                    triggered: false,
+                    ..animating_auth_state.get()
+                },
+                -1.0,
+            );
             queued_auth_state.triggered = false;
 
             if animating_auth_state.get().state.is_none() && queued_auth_state.state.is_some() {
-                animating_auth_state.set(AnimationEvent { state: queued_auth_state.state, triggered: true }, -1.0);
+                animating_auth_state.set(
+                    AnimationEvent {
+                        state: queued_auth_state.state,
+                        triggered: true,
+                    },
+                    -1.0,
+                );
 
                 queued_auth_state = AnimationEvent::new();
             }
@@ -174,7 +216,10 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
         match nfc_messages.try_recv() {
             Ok(x) => {
-                queued_auth_state = AnimationEvent { state: Some(x), triggered: true };
+                queued_auth_state = AnimationEvent {
+                    state: Some(x),
+                    triggered: true,
+                };
             }
             Err(_) => {
                 // probably display the error message somehow
@@ -239,7 +284,10 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         #[cfg(debug_assertions)]
         if is_key_pressed(KeyCode::Space) {
             println!("Opening door for debugging purposes...");
-            queued_auth_state = AnimationEvent { state: Some(Valid), triggered: true };
+            queued_auth_state = AnimationEvent {
+                state: Some(Valid),
+                triggered: true,
+            };
             let _ = opener_tx.send(());
         }
 
@@ -281,7 +329,14 @@ fn draw_welcome_window(
     );
 
     draw_texture_sized(doorbell_qr, 580.0, 422.0, WHITE_CL(opacity), 96.0, 96.0);
-    draw_texture_sized(doorbell_qr_pointer, 540.0, 358.0, WHITE_CL(opacity), 160.0, 64.0);
+    draw_texture_sized(
+        doorbell_qr_pointer,
+        540.0,
+        358.0,
+        WHITE_CL(opacity),
+        160.0,
+        64.0,
+    );
 }
 
 fn draw_accepted_window(opacity: u8, font: &Font) {
