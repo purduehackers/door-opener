@@ -37,6 +37,19 @@ fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
     *opacity = (*opacity + 255.0 * 2.0 * direction * delta_time).clamp(0.0, 255.0);
 }
 
+fn draw_texture_sized(texture: &Texture2D, x: f32, y: f32, color: Color, w: f32, h: f32) {
+    draw_texture_ex(
+        texture,
+        x,
+        y,
+        color,
+        DrawTextureParams {
+            dest_size: Some(Vec2 { x: w, y: h }),
+            ..Default::default()
+        },
+    );
+}
+
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
     source * (1.0 - percent) + destination * percent
 }
@@ -279,34 +292,8 @@ fn draw_welcome_window(
         1.0,
     );
 
-    draw_texture_ex(
-        doorbell_qr,
-        580.0,
-        422.0,
-        WHITE_CL(opacity),
-        DrawTextureParams {
-            dest_size: Some(Vec2 { x: 96.0, y: 96.0 }),
-            source: Option::None,
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: Option::None,
-        },
-    );
-    draw_texture_ex(
-        doorbell_qr_pointer,
-        540.0,
-        358.0,
-        WHITE_CL(opacity),
-        DrawTextureParams {
-            dest_size: Some(Vec2 { x: 160.0, y: 64.0 }),
-            source: Option::None,
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: Option::None,
-        },
-    );
+    draw_texture_sized(doorbell_qr, 580.0, 422.0, WHITE_CL(opacity), 96.0, 96.0);
+    draw_texture_sized(doorbell_qr_pointer, 540.0, 358.0, WHITE_CL(opacity), 160.0, 64.0);
 }
 
 fn draw_accepted_window(opacity: u8, font: &Font) {
@@ -364,18 +351,5 @@ fn draw_error_window(
         1.0,
     );
 
-    draw_texture_ex(
-        doorbell_qr,
-        500.0,
-        179.0,
-        WHITE_CL(opacity),
-        DrawTextureParams {
-            dest_size: Some(Vec2 { x: 192.0, y: 192.0 }),
-            source: Option::None,
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: Option::None,
-        },
-    );
+    draw_texture_sized(doorbell_qr, 500.0, 179.0, WHITE_CL(opacity), 192.0, 192.0);
 }
