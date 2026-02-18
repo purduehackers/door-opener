@@ -141,28 +141,16 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
                         active_message.set(0, 6.5); // after welcome + 5.0s
                         animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after welcome + 0.5s
                     }
-                    // Invalid passport screen
-                    Invalid => {
-                        auth_state.set(AuthState::Invalid, -1.0);
-                        active_message.set(2, -1.0);
-
-                        show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after previous + 0.5s
-                    }
-                    // Net error screen
-                    NetError => {
-                        auth_state.set(AuthState::NetError, -1.0);
-                        active_message.set(3, -1.0);
-
-                        show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after previous + 0.5s
-                    }
-                    // NFC error screen
-                    NFCError => {
-                        auth_state.set(AuthState::NFCError, -1.0);
-                        active_message.set(4, -1.0);
+                    // Error screens (Invalid, NetError, NFCError)
+                    Invalid | NetError | NFCError => {
+                        let msg_id = match anim_state {
+                            Invalid => 2,
+                            NetError => 3,
+                            NFCError => 4,
+                            _ => unreachable!(),
+                        };
+                        auth_state.set(anim_state, -1.0);
+                        active_message.set(msg_id, -1.0);
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
