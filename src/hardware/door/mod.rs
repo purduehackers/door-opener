@@ -11,7 +11,10 @@ use tokio::{
     task,
 };
 
-use crate::hardware::door::{ada_pusher::AdaPusher, lx16a::LX16A};
+#[cfg(feature = "ada_pusher")]
+use crate::hardware::door::ada_pusher::AdaPusher;
+#[cfg(feature = "lx16a")]
+use crate::hardware::door::lx16a::LX16A;
 
 pub struct DoorOpener {
     tx: UnboundedSender<()>,
@@ -29,15 +32,16 @@ impl DoorOpener {
         let (tx, mut rx) = unbounded_channel::<()>();
 
         task::spawn(async move {
-            let mut module: Box<dyn OpenModule + Send> = if cfg!(feature = "ada_pusher") {
-                Box::new(
-                    AdaPusher::new()
-                        .await
-                        .expect("Failed to initialize ada-pusher"),
-                )
-            } else {
-                Box::new(LX16A::new())
-            };
+            #[cfg(feature = "ada_pusher")]
+            let mut module: Box<dyn OpenModule + Send> = Box::new(
+                AdaPusher::new()
+                    .await
+                    .expect("Failed to initialize ada-pusher"),
+            );
+            #[cfg(all(feature = "lx16a", not(feature = "ada_pusher")))]
+            let mut module: Box<dyn OpenModule + Send> = Box::new(LX16A::new());
+            #[cfg(not(any(feature = "ada_pusher", feature = "lx16a")))]
+            panic!("No hardware feature specified. At least one must be specified");
 
             loop {
                 match rx.recv().await {
