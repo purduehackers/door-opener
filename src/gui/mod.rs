@@ -17,6 +17,11 @@ const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
 
+fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
+    let direction = if active { 1.0 } else { -1.0 };
+    *opacity = (*opacity + 255.0 * 2.0 * direction * delta_time).clamp(0.0, 255.0);
+}
+
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
     source * (1.0 - percent) + destination * percent
 }
@@ -166,71 +171,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
         background::draw_background(&background_data);
 
-        welcome_opacity = f32::clamp(
-            welcome_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 0) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
-        );
-        accepted_opacity = f32::clamp(
-            accepted_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 1) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
-        );
-        rejected_opacity = f32::clamp(
-            rejected_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 2) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
-        );
-        net_error_opacity = f32::clamp(
-            net_error_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 3) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
-        );
-        nfc_error_opacity = f32::clamp(
-            nfc_error_opacity
-                + (255.0
-                    * 2.0
-                    * (if show_welcome.get() && (active_message.get() == 4) {
-                        1.0
-                    } else {
-                        -1.0
-                    }))
-                    * delta_time,
-            0.0,
-            255.0,
-        );
+        let show = show_welcome.get();
+        let msg = active_message.get();
+        update_opacity(&mut welcome_opacity, show && msg == 0, delta_time);
+        update_opacity(&mut accepted_opacity, show && msg == 1, delta_time);
+        update_opacity(&mut rejected_opacity, show && msg == 2, delta_time);
+        update_opacity(&mut net_error_opacity, show && msg == 3, delta_time);
+        update_opacity(&mut nfc_error_opacity, show && msg == 4, delta_time);
 
         draw_welcome_window(
             welcome_opacity as u8,
