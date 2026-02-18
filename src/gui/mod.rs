@@ -13,6 +13,21 @@ use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVaria
 
 use AuthState::*;
 
+#[derive(Copy, Clone, Debug)]
+struct AnimationEvent {
+    state: Option<AuthState>,
+    triggered: bool,
+}
+
+impl AnimationEvent {
+    fn new() -> Self {
+        Self {
+            state: None,
+            triggered: false,
+        }
+    }
+}
+
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
 const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
@@ -50,9 +65,9 @@ pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unbounde
 }
 
 async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: UnboundedSender<()>) {
-    let mut queued_auth_state: (Option<AuthState>, bool) = (None, false);
-    let mut animating_auth_state: TimedVariable<(Option<AuthState>, bool)> =
-        TimedVariable::new((None, false));
+    let mut queued_auth_state = AnimationEvent::new();
+    let mut animating_auth_state: TimedVariable<AnimationEvent> =
+        TimedVariable::new(AnimationEvent::new());
     let mut auth_state: TimedVariable<AuthState> = TimedVariable::new(AuthState::Idle);
     let mut show_welcome: TimedVariable<bool> = TimedVariable::new(true);
     let mut active_message: TimedVariable<i32> = TimedVariable::new(0);
@@ -84,17 +99,17 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         show_welcome.check_for_updates(check_time);
         active_message.check_for_updates(check_time);
 
-        if animating_auth_state.get().1 {
-            animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
+        if animating_auth_state.get().triggered {
+            animating_auth_state.set(AnimationEvent { triggered: false, ..animating_auth_state.get() }, -1.0);
 
-            if animating_auth_state.get().0.is_some() {
-                match animating_auth_state.get().0.unwrap() {
+            if let Some(anim_state) = animating_auth_state.get().state {
+                match anim_state {
                     // Welcome screen
                     Idle => {
                         auth_state.set(AuthState::Idle, -1.0);
                         show_welcome.set(true, -1.0);
 
-                        animating_auth_state.set((None, true), 1.0);
+                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 1.0);
                     }
                     // Loading screen
                     Pending => {
@@ -102,7 +117,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
                         active_message.set(0, -1.0);
 
                         auth_state.set(AuthState::Pending, 0.5);
-                        animating_auth_state.set((None, true), 1.5); // after previous + 1.0s
+                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 1.5); // after previous + 1.0s
                     }
                     // Verified passport screen
                     Valid => {
@@ -111,7 +126,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 6.5); // after welcome + 5.0s
-                        animating_auth_state.set((None, true), 2.0); // after welcome + 0.5s
+                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after welcome + 0.5s
                     }
                     // Invalid passport screen
                     Invalid => {
@@ -120,7 +135,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
+                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after previous + 0.5s
                     }
                     // Net error screen
                     NetError => {
@@ -129,7 +144,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
+                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after previous + 0.5s
                     }
                     // NFC error screen
                     NFCError => {
@@ -138,27 +153,27 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
                         show_welcome.set(true, 1.5);
                         active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set((None, true), 2.0); // after previous + 0.5s
+                        animating_auth_state.set(AnimationEvent { state: None, triggered: true }, 2.0); // after previous + 0.5s
                     }
                 }
             }
         }
 
-        if animating_auth_state.get().1 || queued_auth_state.1 {
+        if animating_auth_state.get().triggered || queued_auth_state.triggered {
             // i think i fixed it // if animations progress too fast, this is probably the problem lmao
-            animating_auth_state.set((animating_auth_state.get().0, false), -1.0);
-            queued_auth_state.1 = false;
+            animating_auth_state.set(AnimationEvent { triggered: false, ..animating_auth_state.get() }, -1.0);
+            queued_auth_state.triggered = false;
 
-            if (animating_auth_state.get().0.is_none()) && (queued_auth_state.0.is_some()) {
-                animating_auth_state.set((queued_auth_state.0, true), -1.0);
+            if animating_auth_state.get().state.is_none() && queued_auth_state.state.is_some() {
+                animating_auth_state.set(AnimationEvent { state: queued_auth_state.state, triggered: true }, -1.0);
 
-                queued_auth_state = (None, false);
+                queued_auth_state = AnimationEvent::new();
             }
         }
 
         match nfc_messages.try_recv() {
             Ok(x) => {
-                queued_auth_state = (Some(x), true);
+                queued_auth_state = AnimationEvent { state: Some(x), triggered: true };
             }
             Err(_) => {
                 // probably display the error message somehow
@@ -223,7 +238,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         #[cfg(debug_assertions)]
         if is_key_pressed(KeyCode::Space) {
             println!("Opening door for debugging purposes...");
-            queued_auth_state = (Some(Valid), true);
+            queued_auth_state = AnimationEvent { state: Some(Valid), triggered: true };
             let _ = opener_tx.send(());
         }
 
