@@ -25,7 +25,6 @@ If you are imaging a new door opener, install the following dependencies:
 - `libudev-dev`
 - `libnfc-dev`
 - `libclang-dev`
-- `xinit` (for X11)
 
 You must also configure details for the NFC board (PN532) you are using. Edit
 `/etc/nfc/libnfc.conf` and uncomment `device.connstring`. Depending on which SPI
@@ -34,6 +33,68 @@ port/pin you've connected the NFC board to, set this value accordingly. Example:
 ```
 device.connstring = "pn532_spi:/dev/spidev0.0"
 ```
+
+If you are connecting `ada-pusher`, you must first enable the adapter, then pair it with `bluetoothctl`:
+
+```
+sudo rfkill unblock bluetooth
+bluetoothctl
+agent on
+default-agent
+scan on
+# wait 10-20 sec
+scan off
+# replace MAC ID below
+trust A0:A1:A2:A3:A4:A5
+# type in PIN after
+pair A0:A1:A2:A3:A4:A5
+connect A0:A1:A2:A3:A4:A5
+exit
+```
+
+For the MAC address of `ada-pusher`, please consult with an organizer.
+
+Next, for the display backend, choose your poison:
+
+#### (Old, deprecated, not recommended) X11
+
+Install additional dependencies:
+
+- `xinit`
+
+From `./install/`, copy `opener-app.service` to `/etc/systemd/system`.
+Also copy `.xinitrc` to the root of the home directory (so `/home/hackers/.xinitrc`).
+Then run:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable --now opener-app
+```
+
+#### Wayland
+
+Install additional dependencies:
+
+- `sway`
+- `seatd`
+- `xwayland`
+
+Note that `xwayland` is required as `macroquad` does not support the Wayland backend yet. (Maybe you can help change this.)
+
+From `./install/`, copy `sway-opener-config` to `~/.config/sway/opener-config`, then run:
+
+```
+sudo systemctl enable --now seatd
+sudo loginctl enable-linger hackers
+```
+
+From `./install/`, copy `opener-app-wayland.service` to `/etc/systemd/system`, then run:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable --now opener-app-wayland
+```
+
 
 ### Local development
 

@@ -1,0 +1,14 @@
+# Output configuration
+# If display changes: swaymsg -t get_outputs
+output HDMI-A-1 transform 270 resolution 720x720 position 0 0
+
+output * bg #000000 solid_color
+
+for_window [app_id=".*"] inhibit_idle open
+for_window [class=".*"] inhibit_idle open
+
+exec sh -c '/home/hackers/door-opener/target/release/openerapp_aarch64; swaymsg exit'
+
+# Force fullscreen for any window that opens
+for_window [app_id=".*"] fullscreen enable
+for_window [class=".*"] fullscreen enable

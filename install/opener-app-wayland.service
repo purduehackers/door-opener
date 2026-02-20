@@ -1,0 +1,21 @@
+[Unit]
+Description=The Opener App that Drives the Door Opener
+After=network.target seatd.service
+Wants=seatd.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=hackers
+Group=hackers
+# XDG_RUNTIME_DIR must match the UID of the hackers user.
+# Find it with: id -u hackers
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WLR_BACKENDS=drm
+ExecStart=sway --config /home/hackers/.config/sway/opener-config
+WorkingDirectory=/home/hackers/door-opener
+
+[Install]
+WantedBy=multi-user.target
