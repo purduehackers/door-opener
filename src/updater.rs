@@ -52,14 +52,24 @@ async fn get_latest_version() -> Result<String> {
     Ok(tag_name)
 }
 
+fn get_arch_suffix() -> Result<&'static str> {
+    match env::consts::ARCH {
+        "aarch64" => Ok("aarch64"),
+        arch => Err(format!("unsupported architecture: {}", arch).into()),
+    }
+}
+
 async fn perform_update() -> Result<()> {
     // Where are we?
     let current_executable_path = env::current_exe().unwrap();
 
-    // Grab artifact from latest release
-    let response =
-        get("https://github.com/purduehackers/door-opener/releases/latest/download/door-opener")
-            .await?;
+    // Grab artifact from latest release matching our architecture
+    let arch = get_arch_suffix()?;
+    let url = format!(
+        "https://github.com/purduehackers/door-opener/releases/latest/download/openerapp_{}",
+        arch
+    );
+    let response = get(&url).await?;
     let artifact = response.bytes().await?.to_vec();
 
     // Replace the current executable with the downloaded artifact

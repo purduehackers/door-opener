@@ -19,9 +19,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev libdbus-1-dev
       - name: Build
         run: cargo build --verbose --release
+      - name: Rename binary
+        run: mv target/release/openerapp target/release/openerapp_aarch64
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
           files: |
-            target/release/openerapp
+            target/release/openerapp_aarch64
