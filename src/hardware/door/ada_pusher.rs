@@ -22,7 +22,19 @@ pub struct AdaPusher {
 const ADA_PUSHER_COMMAND_UUID: Uuid = uuid!("7e783540-f3ab-431f-adff-566767b8bb31");
 
 impl AdaPusher {
-    pub async fn new() -> Result<Self, Box<dyn Error>> {
+    pub async fn new() -> Self {
+        loop {
+            match Self::try_init().await {
+                Ok(pusher) => return pusher,
+                Err(e) => {
+                    eprintln!("ada-pusher init failed: {e}, retrying in 5s...");
+                    time::sleep(Duration::from_secs(5)).await;
+                }
+            }
+        }
+    }
+
+    async fn try_init() -> Result<Self, Box<dyn Error + Send + Sync>> {
         let manager = Manager::new().await?;
         let adapters = manager.adapters().await?;
         let central = adapters.into_iter().nth(0).unwrap();

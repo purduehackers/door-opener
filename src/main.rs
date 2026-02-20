@@ -35,6 +35,8 @@ async fn main() {
     let auth_opener = opener_tx.clone();
     let gui_opener = opener_tx.clone();
 
+    let door_auth_tx = auth_tx.clone();
+
     task::spawn(async {
         auth_entry(auth_tx, auth_opener);
     });
@@ -43,13 +45,13 @@ async fn main() {
         ws_entry(opener_tx);
     });
 
-    task::spawn(opener_entry(opener_rx));
+    task::spawn(opener_entry(opener_rx, door_auth_tx));
 
     gui_entry(gui_rx, gui_opener);
 }
 
-async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
-    let door_opener = DoorOpener::new().await;
+async fn opener_entry(mut opener_rx: UnboundedReceiver<()>, auth_tx: UnboundedSender<AuthState>) {
+    let door_opener = DoorOpener::new(auth_tx).await;
     loop {
         if opener_rx.recv().await.is_some() {
             door_opener.open()

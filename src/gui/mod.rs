@@ -90,6 +90,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
     let mut rejected_opacity: f32 = 0.0;
     let mut net_error_opacity: f32 = 0.0;
     let mut nfc_error_opacity: f32 = 0.0;
+    let mut doorhw_not_ready_error_opacity: f32 = 0.0;
 
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
 
@@ -165,12 +166,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
                             2.0,
                         ); // after welcome + 0.5s
                     }
-                    // Error screens (Invalid, NetError, NFCError)
-                    Invalid | NetError | NFCError => {
+                    // Error screens
+                    Invalid | NetError | NFCError | DoorHWNotReady => {
                         let msg_id = match anim_state {
                             Invalid => 2,
                             NetError => 3,
                             NFCError => 4,
+                            DoorHWNotReady => 5,
                             _ => unreachable!(),
                         };
                         auth_state.set(anim_state, -1.0);
@@ -239,6 +241,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         update_opacity(&mut rejected_opacity, show && msg == 2, delta_time);
         update_opacity(&mut net_error_opacity, show && msg == 3, delta_time);
         update_opacity(&mut nfc_error_opacity, show && msg == 4, delta_time);
+        update_opacity(&mut doorhw_not_ready_error_opacity, show && msg == 5, delta_time);
 
         draw_welcome_window(
             welcome_opacity as u8,
@@ -267,6 +270,13 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             &doorbell_qr,
             "NFC read error!",
             "Please take away your passport, then hold it still during the scan!",
+        );
+        draw_error_window(
+            doorhw_not_ready_error_opacity as u8,
+            &segoe_ui,
+            &doorbell_qr,
+            "Button pusher not ready yet!",
+            "Try again after a minute or contact an organizer.",
         );
 
         draw_passport(

@@ -7,4 +7,5 @@ pub enum AuthState {
     Invalid = 3,
     NetError = 4,
     NFCError = 5,
+    DoorHWNotReady = 6,
 }
