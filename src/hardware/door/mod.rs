@@ -4,11 +4,13 @@ mod ada_pusher;
 mod lx16a;
 
 use std::error::Error;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use tokio::{
     sync::mpsc::{UnboundedSender, unbounded_channel},
     task,
+    time,
 };
 
 #[cfg(feature = "ada_pusher")]
@@ -17,6 +19,9 @@ use crate::hardware::door::ada_pusher::AdaPusher;
 use crate::hardware::door::lx16a::LX16A;
 use crate::enums::AuthState;
 
+const OPEN_DOOR_MAX_RETRIES: u32 = 3;
+const OPEN_DOOR_RETRY_DELAY: Duration = Duration::from_secs(1);
+
 pub struct DoorOpener {
     tx: UnboundedSender<()>,
 }
@@ -24,6 +29,24 @@ pub struct DoorOpener {
 #[async_trait]
 trait OpenModule {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>>;
+}
+
+async fn open_with_retry(module: &mut (dyn OpenModule + Send)) {
+    for attempt in 1..=OPEN_DOOR_MAX_RETRIES {
+        match module.open_door().await {
+            Ok(()) => return,
+            Err(e) => {
+                eprintln!(
+                    "open_door failed (attempt {}/{}): {e}",
+                    attempt, OPEN_DOOR_MAX_RETRIES
+                );
+                if attempt < OPEN_DOOR_MAX_RETRIES {
+                    time::sleep(OPEN_DOOR_RETRY_DELAY).await;
+                }
+            }
+        }
+    }
+    eprintln!("open_door failed after {} attempts", OPEN_DOOR_MAX_RETRIES);
 }
 
 impl DoorOpener {
@@ -69,7 +92,7 @@ impl DoorOpener {
                                 match msg {
                                     Some(_) => {
                                         if let Some(ref mut m) = module {
-                                            let _ = m.open_door().await;
+                                            open_with_retry(m.as_mut()).await;
                                         } else {
                                             let _ = auth_tx.send(AuthState::DoorHWNotReady);
                                         }
@@ -85,7 +108,7 @@ impl DoorOpener {
                 match rx.recv().await {
                     Some(_) => {
                         if let Some(ref mut m) = module {
-                            let _ = m.open_door().await;
+                            open_with_retry(m.as_mut()).await;
                         } else {
                             let _ = auth_tx.send(AuthState::DoorHWNotReady);
                         }
