@@ -31,10 +31,10 @@ trait OpenModule {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 
-async fn open_with_retry(module: &mut (dyn OpenModule + Send)) {
+async fn open_with_retry(module: &mut (dyn OpenModule + Send)) -> bool {
     for attempt in 1..=OPEN_DOOR_MAX_RETRIES {
         match module.open_door().await {
-            Ok(()) => return,
+            Ok(()) => return true,
             Err(e) => {
                 eprintln!(
                     "open_door failed (attempt {}/{}): {e}",
@@ -46,7 +46,18 @@ async fn open_with_retry(module: &mut (dyn OpenModule + Send)) {
             }
         }
     }
-    eprintln!("open_door failed after {} attempts", OPEN_DOOR_MAX_RETRIES);
+    eprintln!("open_door failed after {} attempts, re-initializing module", OPEN_DOOR_MAX_RETRIES);
+    false
+}
+
+#[cfg(feature = "ada_pusher")]
+fn spawn_ada_pusher_init() -> tokio::sync::oneshot::Receiver<Box<dyn OpenModule + Send>> {
+    let (init_tx, init_rx) = tokio::sync::oneshot::channel::<Box<dyn OpenModule + Send>>();
+    task::spawn(async move {
+        let pusher = AdaPusher::new().await;
+        let _ = init_tx.send(Box::new(pusher));
+    });
+    init_rx
 }
 
 impl DoorOpener {
@@ -60,13 +71,7 @@ impl DoorOpener {
             let mut module: Option<Box<dyn OpenModule + Send>> = None;
 
             #[cfg(feature = "ada_pusher")]
-            let (init_tx, init_rx) = tokio::sync::oneshot::channel::<Box<dyn OpenModule + Send>>();
-
-            #[cfg(feature = "ada_pusher")]
-            task::spawn(async move {
-                let pusher = AdaPusher::new().await;
-                let _ = init_tx.send(Box::new(pusher));
-            });
+            let init_rx = spawn_ada_pusher_init();
 
             #[cfg(all(feature = "lx16a", not(feature = "ada_pusher")))]
             {
@@ -92,7 +97,10 @@ impl DoorOpener {
                                 match msg {
                                     Some(_) => {
                                         if let Some(ref mut m) = module {
-                                            open_with_retry(m.as_mut()).await;
+                                            if !open_with_retry(m.as_mut()).await {
+                                                module = None;
+                                                init_rx = Some(spawn_ada_pusher_init());
+                                            }
                                         } else {
                                             let _ = auth_tx.send(AuthState::DoorHWNotReady);
                                         }
@@ -108,7 +116,19 @@ impl DoorOpener {
                 match rx.recv().await {
                     Some(_) => {
                         if let Some(ref mut m) = module {
-                            open_with_retry(m.as_mut()).await;
+                            if !open_with_retry(m.as_mut()).await {
+                                module = None;
+
+                                #[cfg(feature = "ada_pusher")]
+                                {
+                                    init_rx = Some(spawn_ada_pusher_init());
+                                }
+
+                                #[cfg(all(feature = "lx16a", not(feature = "ada_pusher")))]
+                                {
+                                    module = Some(Box::new(LX16A::new()));
+                                }
+                            }
                         } else {
                             let _ = auth_tx.send(AuthState::DoorHWNotReady);
                         }
