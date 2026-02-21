@@ -24,6 +24,9 @@ pub fn auth_entry(gui_sender: UnboundedSender<AuthState>, opener_tx: UnboundedSe
                         Ok(verified) => {
                             let _ = gui_sender.send(if verified { Valid } else { Invalid });
                             if verified {
+                                println!(
+                                    "Passport successfully validated, sending open command..."
+                                );
                                 let _ = opener_tx.send(());
                             }
                         }

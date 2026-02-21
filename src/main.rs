@@ -53,6 +53,7 @@ async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
     let door_opener = DoorOpener::new().await;
     loop {
         if opener_rx.recv().await.is_some() {
+            println!("opener_entry: received open message");
             door_opener.open()
         }
     }
