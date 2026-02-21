@@ -28,13 +28,15 @@ impl DoorOpener {
 
             loop {
                 match rx.recv().await {
-                    println!("Inner thread received message!");
-                    Some(_) => match module.open_door().await {
-                        Ok(_) => (),
-                        Err(e) => {
-                            eprintln!("Failed to open door, error: {e:?}")
+                    Some(_) => {
+                        println!("Inner thread received message!");
+                        match module.open_door().await {
+                            Ok(_) => (),
+                            Err(e) => {
+                                eprintln!("Failed to open door, error: {e:?}")
+                            }
                         }
-                    },
+                    }
                     None => {
                         eprintln!("Received nothing...");
                     }
