@@ -27,9 +27,20 @@ pub async fn update_check() -> bool {
     let current_version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
 
     // Compare our version string
-    if latest_version > current_version && perform_update().await.is_ok() {
-        true
+    if latest_version > current_version {
+        println!(
+            "We are out of date; the latest version is {} and we are at {}",
+            latest_version, current_version
+        );
+        if perform_update().await.is_ok() {
+            println!("Update successful!");
+            true
+        } else {
+            println!("Update failed!");
+            false
+        }
     } else {
+        println!("No update required; current version is {}", current_version);
         false
     }
 }
