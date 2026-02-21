@@ -26,6 +26,7 @@ use updater::update_check;
 async fn main() {
     #[cfg(not(debug_assertions))]
     if update_check().await {
+        println!("Finished updating to a newer version, closing!");
         // Quit, systemd will pick us back up
         return;
     }
