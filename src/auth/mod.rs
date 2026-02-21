@@ -27,7 +27,12 @@ pub fn auth_entry(gui_sender: UnboundedSender<AuthState>, opener_tx: UnboundedSe
                                 println!(
                                     "Passport successfully validated, sending open command..."
                                 );
-                                let _ = opener_tx.send(());
+                                match opener_tx.send(()) {
+                                    Ok(_) => {}
+                                    Err(e) => {
+                                        eprintln!("auth: failed to send open command: {e:?}");
+                                    }
+                                }
                             }
                         }
                         Err(_) => {
