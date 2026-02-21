@@ -28,24 +28,25 @@ impl DoorOpener {
 
             loop {
                 match rx.recv().await {
-                    Some(_) => {
-                        match module.open_door().await {
-                            Ok(_) => (),
-                            Err(e) => {
-                                eprintln!("Failed to open door, error: {e:?}")
-                            }
+                    println!("Inner thread received message!");
+                    Some(_) => match module.open_door().await {
+                        Ok(_) => (),
+                        Err(e) => {
+                            eprintln!("Failed to open door, error: {e:?}")
                         }
-                    }
+                    },
                     None => {
                         eprintln!("Received nothing...");
                     }
                 };
             }
         });
+        println!("General door opener initialization complete; ready to receive messages");
         Self { tx }
     }
 
     pub fn open(&self) {
+        println!("Received open command, sending to inner thread...");
         let _ = self.tx.send(());
     }
 }

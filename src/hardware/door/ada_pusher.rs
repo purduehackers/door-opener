@@ -54,6 +54,7 @@ impl AdaPusher {
         device.discover_services().await?;
         let chars = device.characteristics();
 
+        println!("Finished setting up ada-pusher, discovered characteristics");
         Ok(AdaPusher { device, chars })
     }
 
