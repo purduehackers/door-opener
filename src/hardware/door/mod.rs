@@ -31,13 +31,13 @@ impl DoorOpener {
                     Some(_) => {
                         match module.open_door().await {
                             Ok(_) => (),
-                            Err(_) => {
-                                // TODO: display error somehow later, figure it out
+                            Err(e) => {
+                                eprintln!("Failed to open door, error: {e:?}")
                             }
                         }
                     }
                     None => {
-                        // probably display the error message somehow
+                        eprintln!("Received nothing...");
                     }
                 };
             }
