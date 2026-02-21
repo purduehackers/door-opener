@@ -1,12 +1,11 @@
 #![cfg(not(debug_assertions))]
-
 use std::env;
 
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 
-use reqwest::get;
+use reqwest::Client;
 use semver::Version;
 use serde_json::Value;
 
@@ -35,12 +34,23 @@ pub async fn update_check() -> bool {
     }
 }
 
+fn get_client() -> Result<Client> {
+    Ok(reqwest::Client::builder()
+        .user_agent("door-opener")
+        .build()?)
+}
+
 /// Gets the latest version number from GitHub
 async fn get_latest_version() -> Result<String> {
-    let response =
-        get("https://api.github.com/repos/purduehackers/door-opener/releases/latest").await?;
+    let client = get_client()?;
+    let response = client
+        .get("https://api.github.com/repos/purduehackers/door-opener/releases/latest")
+        .send()
+        .await?;
 
     let json: Value = response.json().await?;
+
+    println!("parsed json");
 
     let tag_name = json
         .get("tag_name")
@@ -69,7 +79,8 @@ async fn perform_update() -> Result<()> {
         "https://github.com/purduehackers/door-opener/releases/latest/download/openerapp_{}",
         arch
     );
-    let response = get(&url).await?;
+    let client = get_client()?;
+    let response = client.get(&url).send().await?;
     let artifact = response.bytes().await?.to_vec();
 
     // Replace the current executable with the downloaded artifact
