@@ -41,7 +41,7 @@ impl AdaPusher {
 
         central.start_scan(ScanFilter::default()).await?;
         println!("Scanning for BLE devices...");
-        time::sleep(Duration::from_secs(10)).await;
+        time::sleep(Duration::from_secs(5)).await;
 
         let device = Self::find_ada_pusher_device(&central)
             .await
