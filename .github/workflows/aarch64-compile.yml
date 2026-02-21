@@ -21,6 +21,8 @@ jobs:
         run: cargo build --verbose --release
       - name: Rename binary
         run: mv target/release/openerapp target/release/openerapp_aarch64
+      - name: Make binary executable
+        run: chmod +x target/release/openerapp_aarch64
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
