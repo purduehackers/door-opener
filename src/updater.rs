@@ -50,8 +50,6 @@ async fn get_latest_version() -> Result<String> {
 
     let json: Value = response.json().await?;
 
-    println!("parsed json");
-
     let tag_name = json
         .get("tag_name")
         .ok_or("missing tag_name")?
