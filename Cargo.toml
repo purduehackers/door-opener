@@ -24,3 +24,6 @@ futures = "0.3.32"
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
 nfc1 = { version = "=0.6.0", default-features=false, features = [ "vendored" ] }
+
+[lints.clippy]
+pedantic = "deny"
