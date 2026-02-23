@@ -20,7 +20,8 @@ trait OpenModule {
 }
 
 impl DoorOpener {
-    pub async fn new() -> DoorOpener {
+    #[must_use]
+    pub fn new() -> DoorOpener {
         let (tx, mut rx) = unbounded_channel::<()>();
 
         task::spawn(async move {
@@ -28,19 +29,19 @@ impl DoorOpener {
 
             loop {
                 match rx.recv().await {
-                    Some(_) => {
+                    Some(()) => {
                         println!("Inner thread received message!");
                         match module.open_door().await {
-                            Ok(_) => (),
+                            Ok(()) => (),
                             Err(e) => {
-                                eprintln!("Failed to open door, error: {e:?}")
+                                eprintln!("Failed to open door, error: {e:?}");
                             }
                         }
                     }
                     None => {
                         eprintln!("Received nothing...");
                     }
-                };
+                }
             }
         });
         println!("General door opener initialization complete; ready to receive messages");
@@ -50,5 +51,11 @@ impl DoorOpener {
     pub fn open(&self) {
         println!("Received open command, sending to inner thread...");
         let _ = self.tx.send(());
+    }
+}
+
+impl Default for DoorOpener {
+    fn default() -> Self {
+        Self::new()
     }
 }

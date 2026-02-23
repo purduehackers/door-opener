@@ -4,14 +4,14 @@ pub mod font_engine;
 pub mod passport;
 pub mod svg;
 
-use colors::*;
+use colors::{BLACK_BG, WHITE_CL, YELLOW_ACCENT};
 use macroquad::prelude::*;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use self::{font_engine::draw_text, passport::draw_passport};
 use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVariable};
 
-use AuthState::*;
+use AuthState::{DoorHWNotReady, Idle, Invalid, NFCError, NetError, Pending, Valid};
 
 #[derive(Copy, Clone, Debug)]
 struct AnimationEvent {
@@ -50,9 +50,12 @@ fn draw_texture_sized(texture: &Texture2D, x: f32, y: f32, color: Color, w: f32,
     );
 }
 
+#[must_use]
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
     source * (1.0 - percent) + destination * percent
 }
+
+#[must_use]
 pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
     Color {
         r: float32_lerp(source.r, destination.r, percent),
@@ -74,7 +77,7 @@ pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unbounde
             ..Default::default()
         },
         gui_main(nfc_messages, opener_tx),
-    )
+    );
 }
 
 async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: UnboundedSender<()>) {
@@ -101,9 +104,9 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             .as_str(),
     );
 
-    let background_data = background::initialise_background().await;
+    let background_data = background::initialise_background();
 
-    let mut passport_data = passport::initialise_passport().await;
+    let mut passport_data = passport::initialise_passport();
 
     loop {
         let check_time = get_time();
@@ -216,21 +219,18 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             }
         }
 
-        match nfc_messages.try_recv() {
-            Ok(x) => {
-                queued_auth_state = AnimationEvent {
-                    state: Some(x),
-                    triggered: true,
-                };
-            }
-            Err(_) => {
-                // probably display the error message somehow
-            }
-        };
+        if let Ok(x) = nfc_messages.try_recv() {
+            queued_auth_state = AnimationEvent {
+                state: Some(x),
+                triggered: true,
+            };
+        } else {
+            // probably display the error message somehow
+        }
 
         let delta_time: f32 = get_frame_time();
 
-        clear_background(Color::from_hex(0x0a0a0a));
+        clear_background(Color::from_hex(0x000a_0a0a));
 
         background::draw_background(&background_data);
 
@@ -286,7 +286,6 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         draw_passport(
             360.0,
             match auth_state.get() {
-                AuthState::Idle => 1200.0,
                 AuthState::Pending => 360.0,
                 AuthState::Valid => -1200.0,
                 _ => 1200.0,
@@ -309,7 +308,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             return;
         }
 
-        next_frame().await
+        next_frame().await;
     }
 }
 

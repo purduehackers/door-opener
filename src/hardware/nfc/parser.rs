@@ -38,7 +38,7 @@ pub enum NDEFParseState {
     MessagePayload,
 }
 
-pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
+pub fn parse_nfc_data(data: &[u8]) -> Result<ParseResult, std::io::Error> {
     //Pull TLV Metadata
 
     let mut parse_record_index: usize = 0;
@@ -91,10 +91,10 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                     next_message_payload_length = data[data_index].into();
                     data_index += 1;
                 } else {
-                    next_message_payload_length = ((data[data_index] as i32) << 24)
-                        + ((data[data_index + 1] as i32) << 16)
-                        + ((data[data_index + 2] as i32) << 8)
-                        + (data[data_index + 3] as i32);
+                    next_message_payload_length = (i32::from(data[data_index]) << 24)
+                        + i32::from(data[data_index + 1] << 16)
+                        + i32::from(data[data_index + 2] << 8)
+                        + i32::from(data[data_index + 3]);
                     data_index += 4;
                 }
 
@@ -138,7 +138,7 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                     parse_result.records.push(PayloadValue {
                         raw_data: vec![],
                         payload_type: PayloadType::Unknown,
-                        data: "".to_string(),
+                        data: String::new(),
                     });
                 }
 
@@ -181,19 +181,18 @@ pub fn parse_nfc_data(data: Vec<u8>) -> Result<ParseResult, std::io::Error> {
                                 .push(parsed_char);
                         }
                     }
-                    _ => {}
+                    PayloadType::Unknown => {}
                 }
 
                 if next_message_message_block.message_end && !next_message_message_block.chunk_flag
                 {
                     break;
-                } else {
-                    if !next_message_message_block.chunk_flag {
-                        parse_record_index += 1;
-                    }
-
-                    NDEFParseState::MessageHeader
                 }
+                if !next_message_message_block.chunk_flag {
+                    parse_record_index += 1;
+                }
+
+                NDEFParseState::MessageHeader
             }
         };
     }
@@ -211,20 +210,21 @@ pub struct MessageBlock {
     //pub type_name_format: u8
 }
 
+#[must_use]
 pub fn parse_ndef_message_block(byte: u8) -> MessageBlock {
     MessageBlock {
         //message_begin: (byte & 0b10000000) != 0,
-        message_end: (byte & 0b01000000) != 0,
-        chunk_flag: (byte & 0b00100000) != 0,
-        short_record: (byte & 0b00010000) != 0,
-        id_length: (byte & 0b00001000) != 0,
+        message_end: (byte & 0b0100_0000) != 0,
+        chunk_flag: (byte & 0b0010_0000) != 0,
+        short_record: (byte & 0b0001_0000) != 0,
+        id_length: (byte & 0b0000_1000) != 0,
         //type_name_format: byte & 0b00000111
     }
 }
 
+#[must_use]
 pub fn get_uri_protocol(identifier: u8) -> &'static str {
     match identifier {
-        0x00 => "",
         0x01 => "http://www.",
         0x02 => "https://www.",
         0x03 => "http://",

@@ -1,6 +1,12 @@
 use macroquad::{prelude::ImageFormat, texture::Texture2D};
 use resvg::usvg::fontdb;
 
+/// Convert given SVG string to PNG array
+///
+/// # Panics
+///
+/// Will panic if the SVG data cannot be decoded by resvg
+#[must_use]
 pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
     let mut opt = resvg::usvg::Options::default();
     opt.fontdb_mut().load_system_fonts();
@@ -20,6 +26,7 @@ pub fn svg_to_png(svg_str: &str) -> Vec<u8> {
     pixmap.encode_png().unwrap()
 }
 
+#[must_use]
 pub fn svg_to_texture(svg_str: &str) -> Texture2D {
     let png_data = svg_to_png(svg_str);
     Texture2D::from_file_with_format(&png_data, Some(ImageFormat::Png))

@@ -6,5 +6,5 @@ pub const BLACK_BG: fn(u8) -> Color = |opacity| Color::from_rgba(10, 10, 10, opa
 
 // Suffixed with CL to distinguish from macroquad built-ins
 pub const WHITE_CL: fn(u8) -> Color = |opacity| Color::from_rgba(255, 255, 255, opacity);
-pub const GREEN_CL: Color = Color::from_hex(0x22c55e);
-pub const RED_CL: Color = Color::from_hex(0xef4444);
+pub const GREEN_CL: Color = Color::from_hex(0x0022_c55e);
+pub const RED_CL: Color = Color::from_hex(0x00ef_4444);

@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use super::svg;
 
-use super::colors::*;
+use super::colors::{BLACK_BG, GREEN_CL, RED_CL, YELLOW_ACCENT};
 use crate::AuthState;
 
 const PASSPORT_EMBLEM: &[u8] = include_bytes!("../assets/passport-emblem.svg");
@@ -21,7 +21,13 @@ pub struct PassportData {
     last_final_y: f32,
 }
 
-pub async fn initialise_passport() -> PassportData {
+/// Initialize passport data
+///
+/// # Panics
+///
+/// Will panic if the textures cannot be loaded
+#[must_use]
+pub fn initialise_passport() -> PassportData {
     let logo_texture = svg::svg_to_texture(
         String::from_utf8(PASSPORT_EMBLEM.to_vec())
             .unwrap()
@@ -47,6 +53,7 @@ pub async fn initialise_passport() -> PassportData {
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut PassportData) {
     let delta_time: f32 = get_frame_time();
     let loading_spinner_angle = (get_time() * 3.0) as f32;
@@ -105,9 +112,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
     passport_data.current_spinner_cutout_opacity = super::float32_lerp(
         passport_data.current_spinner_cutout_opacity,
         match state {
-            AuthState::Idle => 1.0,
             AuthState::Pending => 0.0,
-            AuthState::Valid => 1.0,
             _ => 1.0,
         },
         delta_time * 10.0,
@@ -115,8 +120,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
     passport_data.current_spinner_colour = super::colour_lerp(
         passport_data.current_spinner_colour,
         match state {
-            AuthState::Idle => YELLOW_ACCENT(255),
-            AuthState::Pending => YELLOW_ACCENT(255),
+            AuthState::Idle | AuthState::Pending => YELLOW_ACCENT(255),
             AuthState::Valid => GREEN_CL,
             AuthState::Invalid
             | AuthState::NetError

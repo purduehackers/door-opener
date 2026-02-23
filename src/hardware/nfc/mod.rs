@@ -12,6 +12,16 @@ pub struct NFCReader {
 }
 
 impl NFCReader {
+    /// Initializes `NFCReader`
+    ///
+    /// # Errors
+    ///
+    /// Will error if NFC device cannot be opened to be initialized, or options
+    /// of initialization cannot be set
+    ///
+    /// # Panics
+    ///
+    /// Will panic if NFC device is not found or cannot be initialized
     pub fn new() -> Result<NFCReader, Error> {
         let context: &'static mut Context = Box::leak(Box::new(Context::new().unwrap()));
         let mut device: Device = context.open()?;
@@ -23,6 +33,11 @@ impl NFCReader {
         Ok(Self { device })
     }
 
+    /// Polls NFC reader
+    ///
+    /// # Errors
+    ///
+    /// Will error if polling NFC device fails
     pub fn poll(&mut self) -> Result<Target, Error> {
         self.device.initiator_poll_target(
             &[nfc1::Modulation {
@@ -34,6 +49,12 @@ impl NFCReader {
         )
     }
 
+    /// Read from NFC reader
+    ///
+    /// # Errors
+    ///
+    /// Will error if reading passport data from NFC device fails
+    #[allow(clippy::cast_possible_truncation)]
     pub fn read(&mut self, target: Target) -> Result<PassportData, Error> {
         if let TargetInfo::Iso14443a(_target_info) = target.target_info {
             self.device
@@ -58,22 +79,16 @@ impl NFCReader {
                 }
             }
 
-            let message = match parse_nfc_data(passport_data) {
-                Ok(x) => x,
-                Err(_) => {
-                    return Err(Error::OperationAborted);
-                }
+            let Ok(message) = parse_nfc_data(&passport_data) else {
+                return Err(Error::OperationAborted);
             };
 
             if message.records.len() != 3 {
                 return Err(Error::OperationAborted);
             }
 
-            let passport_id = match message.records[1].data.parse::<i32>() {
-                Ok(x) => x,
-                Err(_) => {
-                    return Err(Error::OperationAborted);
-                }
+            let Ok(passport_id) = message.records[1].data.parse::<i32>() else {
+                return Err(Error::OperationAborted);
             };
             let passport_secret = message.records[2].data.clone();
 

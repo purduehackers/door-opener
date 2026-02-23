@@ -10,7 +10,13 @@ pub struct BackgroundData {
     logo_texture: Texture2D,
 }
 
-pub async fn initialise_background() -> BackgroundData {
+/// Draws background with Purdue Hackers glider logo
+///
+/// # Panics
+///
+/// Will panic if the shader cannot be loaded
+#[must_use]
+pub fn initialise_background() -> BackgroundData {
     let logo_texture: Texture2D = Texture2D::from_file_with_format(PH_LOGO_TILABLE, None);
 
     let background_material = load_material(
@@ -39,13 +45,14 @@ pub async fn initialise_background() -> BackgroundData {
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn draw_background(background_data: &BackgroundData) {
     background_data
         .material
         .set_uniform("time", (get_time() % 6.0) as f32);
     background_data
         .material
-        .set_texture("logo_texture", background_data.logo_texture.to_owned());
+        .set_texture("logo_texture", background_data.logo_texture.clone());
 
     gl_use_material(&background_data.material);
     draw_rectangle(0.0, 0.0, 720.0, 720.0, WHITE);

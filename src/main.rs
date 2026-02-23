@@ -9,7 +9,10 @@ mod updater;
 
 use std::{env, time::Duration};
 
-use async_tungstenite::{tokio::connect_async, tungstenite::Message};
+use async_tungstenite::{
+    tokio::connect_async,
+    tungstenite::{Bytes, Message},
+};
 use auth::auth_entry;
 use futures::prelude::*;
 use tokio::{
@@ -50,16 +53,22 @@ async fn main() {
 }
 
 async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
-    let door_opener = DoorOpener::new().await;
+    let door_opener = DoorOpener::new();
     loop {
         if opener_rx.recv().await.is_some() {
             println!("opener_entry: received open message");
-            door_opener.open()
+            door_opener.open();
         }
     }
 }
 
 async fn ws_entry(opener_tx: UnboundedSender<()>) {
+    #[derive(Debug, serde::Deserialize)]
+    #[serde(tag = "type")]
+    enum WebSocketMessage {
+        Open,
+    }
+
     let (socket, _resp) =
         match connect_async("wss://api.purduehackers.com/phonebell/door-opener").await {
             Ok(x) => x,
@@ -80,16 +89,10 @@ async fn ws_entry(opener_tx: UnboundedSender<()>) {
         .await
         .expect("write auth");
 
-    #[derive(Debug, serde::Deserialize)]
-    #[serde(tag = "type")]
-    enum WebSocketMessage {
-        Open,
-    }
-
     loop {
         tokio::select! {
-            _ = sleep(Duration::from_millis(500)) => {
-                write.send(Message::Ping(Default::default())).await.expect("ping");
+            () = sleep(Duration::from_millis(500)) => {
+                write.send(Message::Ping(Bytes::default())).await.expect("ping");
             }
             msg = read.next() => {
                 match msg {
