@@ -42,9 +42,7 @@ async fn main() {
         auth_entry(auth_tx, auth_opener);
     });
 
-    task::spawn_blocking(|| {
-        ws_entry(opener_tx);
-    });
+    task::spawn(ws_entry(opener_tx));
 
     task::spawn(opener_entry(opener_rx));
 
