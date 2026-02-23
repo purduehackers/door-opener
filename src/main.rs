@@ -74,7 +74,7 @@ async fn ws_entry(opener_tx: UnboundedSender<()>) {
     let (write, read) = socket.split();
 
     write
-        .send(tungstenite::Message::Text(
+        .send(Message::Text(
             env::var("DOOR_OPENER_API_KEY")
                 .expect("door opener API key")
                 .into(),
