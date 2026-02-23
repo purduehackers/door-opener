@@ -139,9 +139,10 @@ fn update_spinner_state(state: AuthState, delta_time: f32, passport_data: &mut P
     let target_colour = match state {
         AuthState::Idle | AuthState::Pending => YELLOW_ACCENT(255),
         AuthState::Valid => GREEN_CL,
-        AuthState::Invalid | AuthState::NetError | AuthState::NFCError | AuthState::DoorHWNotReady => {
-            RED_CL
-        }
+        AuthState::Invalid
+        | AuthState::NetError
+        | AuthState::NFCError
+        | AuthState::DoorHWNotReady => RED_CL,
     };
 
     passport_data.current_spinner_colour = super::colour_lerp(
