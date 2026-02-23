@@ -38,9 +38,10 @@ pub enum NDEFParseState {
     MessagePayload,
 }
 
-pub fn parse_nfc_data(data: &[u8]) -> Result<ParseResult, std::io::Error> {
+/// Parses NFC data into NDEF structure
+#[must_use]
+pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
     //Pull TLV Metadata
-
     let mut parse_record_index: usize = 0;
 
     let mut parse_result: ParseResult = ParseResult {
@@ -111,7 +112,7 @@ pub fn parse_nfc_data(data: &[u8]) -> Result<ParseResult, std::io::Error> {
                 next_message_type = 0;
 
                 for n in (0..next_message_type_length).rev() {
-                    next_message_type += (data[data_index] as i32) << (n * 8);
+                    next_message_type += i32::from(data[data_index]) << (n * 8);
                     data_index += 1;
                 }
 
@@ -196,8 +197,7 @@ pub fn parse_nfc_data(data: &[u8]) -> Result<ParseResult, std::io::Error> {
             }
         };
     }
-
-    Ok(parse_result)
+    parse_result
 }
 
 #[derive(Debug)]

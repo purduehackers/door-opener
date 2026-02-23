@@ -41,8 +41,8 @@ async fn main() {
     let auth_opener = opener_tx.clone();
     let gui_opener = opener_tx.clone();
 
-    task::spawn_blocking(|| {
-        auth_entry(auth_tx, auth_opener);
+    task::spawn_blocking(move || {
+        auth_entry(&auth_tx, &auth_opener);
     });
 
     task::spawn(ws_entry(opener_tx));

@@ -12,7 +12,7 @@ use AuthState::{Idle, Invalid, NFCError, NetError, Pending, Valid};
 /// # Panics
 ///
 /// Will panic if the NFC reader cannot be initialized
-pub fn auth_entry(gui_sender: UnboundedSender<AuthState>, opener_tx: UnboundedSender<()>) {
+pub fn auth_entry(gui_sender: &UnboundedSender<AuthState>, opener_tx: &UnboundedSender<()>) {
     let mut nfc_reader: NFCReader = NFCReader::new().expect("Failed to initialize NFC reader");
 
     loop {

@@ -37,6 +37,12 @@ fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
     *opacity = (*opacity + 255.0 * 2.0 * direction * delta_time).clamp(0.0, 255.0);
 }
 
+#[allow(clippy::cast_possible_truncation)]
+fn opacity_to_u8(opacity: f32) -> u8 {
+    let clamped = opacity.clamp(0.0, 255.0).round() as i32;
+    u8::try_from(clamped).unwrap_or(0)
+}
+
 fn draw_texture_sized(texture: &Texture2D, x: f32, y: f32, color: Color, w: f32, h: f32) {
     draw_texture_ex(
         texture,
@@ -248,35 +254,35 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         );
 
         draw_welcome_window(
-            welcome_opacity as u8,
+            opacity_to_u8(welcome_opacity),
             &segoe_ui,
             &doorbell_qr,
             &doorbell_qr_pointer,
         );
-        draw_accepted_window(accepted_opacity as u8, &segoe_ui);
+        draw_accepted_window(opacity_to_u8(accepted_opacity), &segoe_ui);
         draw_error_window(
-            rejected_opacity as u8,
+            opacity_to_u8(rejected_opacity),
             &segoe_ui,
             &doorbell_qr,
             "Invalid Passport!",
             "Please try again or scan the QR code to ring the doorbell manually!",
         );
         draw_error_window(
-            net_error_opacity as u8,
+            opacity_to_u8(net_error_opacity),
             &segoe_ui,
             &doorbell_qr,
             "Something went wrong!",
             "We're having connectivity issues at the moment. Please try again.",
         );
         draw_error_window(
-            nfc_error_opacity as u8,
+            opacity_to_u8(nfc_error_opacity),
             &segoe_ui,
             &doorbell_qr,
             "NFC read error!",
             "Please take away your passport, then hold it still during the scan!",
         );
         draw_error_window(
-            doorhw_not_ready_error_opacity as u8,
+            opacity_to_u8(doorhw_not_ready_error_opacity),
             &segoe_ui,
             &doorbell_qr,
             "Button pusher not ready yet!",

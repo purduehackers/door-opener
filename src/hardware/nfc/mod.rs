@@ -62,12 +62,11 @@ impl NFCReader {
 
             let mut passport_data: Vec<u8> = vec![];
 
-            for n in (4..50).step_by(4) {
-                match self.device.initiator_transceive_bytes(
-                    &[0x30, n as u8],
-                    16,
-                    nfc1::Timeout::Default,
-                ) {
+            for n in (4u8..50).step_by(4) {
+                match self
+                    .device
+                    .initiator_transceive_bytes(&[0x30, n], 16, nfc1::Timeout::Default)
+                {
                     Ok(data) => {
                         for byte in data {
                             passport_data.push(byte);
@@ -79,9 +78,7 @@ impl NFCReader {
                 }
             }
 
-            let Ok(message) = parse_nfc_data(&passport_data) else {
-                return Err(Error::OperationAborted);
-            };
+            let message = parse_nfc_data(&passport_data);
 
             if message.records.len() != 3 {
                 return Err(Error::OperationAborted);
