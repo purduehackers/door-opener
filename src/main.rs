@@ -60,7 +60,7 @@ async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
 }
 
 async fn ws_entry(opener_tx: UnboundedSender<()>) {
-    let (mut socket, _resp) =
+    let (socket, _resp) =
         match connect_async("wss://api.purduehackers.com/phonebell/door-opener").await {
             Ok(x) => x,
             Err(e) => {
