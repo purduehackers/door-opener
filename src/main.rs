@@ -69,7 +69,7 @@ async fn ws_entry(opener_tx: UnboundedSender<()>) {
             }
         };
 
-    let (write, read) = socket.split();
+    let (mut write, mut read) = socket.split();
 
     write
         .send(Message::Text(
