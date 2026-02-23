@@ -91,7 +91,7 @@ async fn ws_entry(opener_tx: UnboundedSender<()>) {
 
     loop {
         tokio::select! {
-            () = sleep(Duration::from_millis(500)) => {
+            () = sleep(Duration::from_secs(25)) => {
                 write.send(Message::Ping(Bytes::default())).await.expect("ping");
             }
             msg = read.next() => {
