@@ -91,9 +91,9 @@ pub fn parse_nfc_data(data: &[u8]) -> Result<ParseResult, std::io::Error> {
                     next_message_payload_length = data[data_index].into();
                     data_index += 1;
                 } else {
-                    next_message_payload_length = (i32::from(data[data_index]) << 24)
-                        + i32::from(data[data_index + 1] << 16)
-                        + i32::from(data[data_index + 2] << 8)
+                    next_message_payload_length = ((i32::from(data[data_index])) << 24)
+                        + (i32::from(data[data_index + 1]) << 16)
+                        + (i32::from(data[data_index + 2]) << 8)
                         + i32::from(data[data_index + 3]);
                     data_index += 4;
                 }
