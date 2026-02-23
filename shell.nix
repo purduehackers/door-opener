@@ -1,14 +1,3 @@
-{ pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
-    nativeBuildInputs = with pkgs.buildPackages; [ 
-        cargo
-        rustc
-        llvm
-        clang
-        pkg-config
-        systemd
-        xorg.libX11
-        wayland
-    ];
-    LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
-}
+# Compat shim: delegates to flake.nix devShell.
+# Use `nix develop` (flake) or `nix-shell` (legacy) interchangeably.
+(builtins.getFlake (toString ./.)).devShells.${builtins.currentSystem}.default
