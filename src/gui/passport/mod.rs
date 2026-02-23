@@ -65,31 +65,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         passport_data.last_final_y = passport_data.current_y;
     }
 
-    match state {
-        AuthState::Idle => {
-            passport_data.current_x = x;
-            passport_data.current_y = y;
-        }
-        AuthState::Pending => {
-            let linear_x = f32::clamp(passport_data.current_animation_time, 0.0, 1.0);
-            let curved_x: f32 =
-                -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
-
-            passport_data.current_x = super::float32_lerp(passport_data.last_final_x, x, curved_x);
-            passport_data.current_y = super::float32_lerp(passport_data.last_final_y, y, curved_x);
-        }
-        _ => {
-            let linear_x = passport_data.current_animation_time - 1.0;
-            let mut curved_x: f32 = 0.0;
-
-            if linear_x >= 0.0 {
-                curved_x = -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x);
-            }
-
-            passport_data.current_x = super::float32_lerp(passport_data.last_final_x, x, curved_x);
-            passport_data.current_y = super::float32_lerp(passport_data.last_final_y, y, curved_x);
-        }
-    }
+    update_passport_position(x, y, state, passport_data);
 
     passport_data.current_animation_time =
         f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
@@ -109,26 +85,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         BLACK_BG(255),
     );
 
-    passport_data.current_spinner_cutout_opacity = super::float32_lerp(
-        passport_data.current_spinner_cutout_opacity,
-        match state {
-            AuthState::Pending => 0.0,
-            _ => 1.0,
-        },
-        delta_time * 10.0,
-    );
-    passport_data.current_spinner_colour = super::colour_lerp(
-        passport_data.current_spinner_colour,
-        match state {
-            AuthState::Idle | AuthState::Pending => YELLOW_ACCENT(255),
-            AuthState::Valid => GREEN_CL,
-            AuthState::Invalid
-            | AuthState::NetError
-            | AuthState::NFCError
-            | AuthState::DoorHWNotReady => RED_CL,
-        },
-        delta_time * 10.0,
-    );
+    update_spinner_state(state, delta_time, passport_data);
 
     draw_texture(
         &passport_data.logo_texture,
@@ -137,6 +94,64 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
         YELLOW_ACCENT(255),
     );
 
+    draw_loading_spinner(loading_spinner_angle, passport_data);
+}
+
+fn update_passport_position(x: f32, y: f32, state: AuthState, passport_data: &mut PassportData) {
+    let curved_x = match state {
+        AuthState::Idle => None,
+        AuthState::Pending => {
+            let linear_x = f32::clamp(passport_data.current_animation_time, 0.0, 1.0);
+            Some(ease_in_out(linear_x))
+        }
+        _ => {
+            let linear_x = passport_data.current_animation_time - 1.0;
+            if linear_x >= 0.0 {
+                Some(ease_in_out(linear_x))
+            } else {
+                Some(0.0)
+            }
+        }
+    };
+
+    if let Some(curve) = curved_x {
+        passport_data.current_x = super::float32_lerp(passport_data.last_final_x, x, curve);
+        passport_data.current_y = super::float32_lerp(passport_data.last_final_y, y, curve);
+    } else {
+        passport_data.current_x = x;
+        passport_data.current_y = y;
+    }
+}
+
+fn update_spinner_state(state: AuthState, delta_time: f32, passport_data: &mut PassportData) {
+    let target_opacity = if matches!(state, AuthState::Pending) {
+        0.0
+    } else {
+        1.0
+    };
+
+    passport_data.current_spinner_cutout_opacity = super::float32_lerp(
+        passport_data.current_spinner_cutout_opacity,
+        target_opacity,
+        delta_time * 10.0,
+    );
+
+    let target_colour = match state {
+        AuthState::Idle | AuthState::Pending => YELLOW_ACCENT(255),
+        AuthState::Valid => GREEN_CL,
+        AuthState::Invalid | AuthState::NetError | AuthState::NFCError | AuthState::DoorHWNotReady => {
+            RED_CL
+        }
+    };
+
+    passport_data.current_spinner_colour = super::colour_lerp(
+        passport_data.current_spinner_colour,
+        target_colour,
+        delta_time * 10.0,
+    );
+}
+
+fn draw_loading_spinner(loading_spinner_angle: f32, passport_data: &PassportData) {
     let spinner_center_x =
         passport_data.current_x - (passport_data.loading_spinner_texture.width() / 2.0);
     let spinner_center_y =
@@ -176,4 +191,8 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
             pivot: Option::None,
         },
     );
+}
+
+fn ease_in_out(linear_x: f32) -> f32 {
+    -2.0 * (linear_x * linear_x * linear_x) + 3.0 * (linear_x * linear_x)
 }
