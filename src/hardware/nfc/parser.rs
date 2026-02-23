@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(i32)]
 pub enum PayloadType {
     Text = 0x54,
@@ -38,30 +38,116 @@ pub enum NDEFParseState {
     MessagePayload,
 }
 
+struct NextMessageMeta {
+    block: MessageBlock,
+    type_len: i32,
+    payload_len: i32,
+    id_len: i32,
+}
+
+fn read_message_header(data: &[u8], data_index: &mut usize) -> NextMessageMeta {
+    let block = parse_ndef_message_block(data[*data_index]);
+    *data_index += 1;
+
+    let type_len = data[*data_index].into();
+    *data_index += 1;
+
+    let payload_len = if block.short_record {
+        let len = data[*data_index].into();
+        *data_index += 1;
+        len
+    } else {
+        let len = ((i32::from(data[*data_index])) << 24)
+            + (i32::from(data[*data_index + 1]) << 16)
+            + (i32::from(data[*data_index + 2]) << 8)
+            + i32::from(data[*data_index + 3]);
+        *data_index += 4;
+        len
+    };
+
+    let id_len = if block.id_length {
+        let len = data[*data_index].into();
+        *data_index += 1;
+        len
+    } else {
+        -1
+    };
+
+    NextMessageMeta {
+        block,
+        type_len,
+        payload_len,
+        id_len,
+    }
+}
+
+fn read_message_type(data: &[u8], data_index: &mut usize, type_len: i32) -> i32 {
+    let mut message_type = 0;
+    for n in (0..type_len).rev() {
+        message_type += i32::from(data[*data_index]) << (n * 8);
+        *data_index += 1;
+    }
+    message_type
+}
+
+fn skip_message_id(data_index: &mut usize, id_len: i32) {
+    for _ in (0..id_len).rev() {
+        *data_index += 1;
+    }
+}
+
+#[allow(clippy::cast_sign_loss)]
+fn read_payload_bytes(data: &[u8], data_index: &mut usize, payload_len: i32) -> Vec<u8> {
+    let mut raw = Vec::with_capacity(payload_len.max(0) as usize);
+    for _ in 0..payload_len {
+        raw.push(data[*data_index]);
+        *data_index += 1;
+    }
+    raw
+}
+
+fn decode_payload(payload_type: PayloadType, raw_data: &[u8]) -> String {
+    match payload_type {
+        PayloadType::Text => {
+            let mut data = String::new();
+            let encoding_length = raw_data[0];
+            for &byte in raw_data.iter().skip(encoding_length as usize + 1) {
+                data.push(byte as char);
+            }
+            data
+        }
+        PayloadType::URL => {
+            let mut data = String::from(get_uri_protocol(raw_data[0]));
+            for &byte in raw_data.iter().skip(1) {
+                data.push(byte as char);
+            }
+            data
+        }
+        PayloadType::Unknown => String::new(),
+    }
+}
+
+fn read_ndef_header(data: &[u8]) -> (u8, usize, usize) {
+    let message_type = data[0];
+    if data[1] > 0xfe {
+        let message_length = ((data[2] as usize) << 8) + (data[3] as usize);
+        (message_type, message_length, 4)
+    } else {
+        (message_type, data[1].into(), 2)
+    }
+}
+
 /// Parses NFC data into NDEF structure
 #[must_use]
 pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
-    //Pull TLV Metadata
-    let mut parse_record_index: usize = 0;
-
+    let (message_type, message_length, data_offset) = read_ndef_header(data);
     let mut parse_result: ParseResult = ParseResult {
-        message_type: data[0],
-        message_length: 0,
+        message_type,
+        message_length,
         records: vec![],
     };
 
-    let data_offset: usize = if data[1] > 0xfe {
-        parse_result.message_length = ((data[2] as usize) << 8) + (data[3] as usize);
-
-        4
-    } else {
-        parse_result.message_length = data[1].into();
-
-        2
-    };
-
-    //Start NDEF State Machine
-
+    let mut parse_record_index: usize = 0;
     let mut data_index: usize = data_offset;
     let mut data_parse_state: NDEFParseState = NDEFParseState::MessageHeader;
 
@@ -76,45 +162,22 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
     let mut next_message_type_length: i32 = -1;
     let mut next_message_type: i32 = -1;
     let mut next_message_id_length: i32 = -1;
-    //let mut next_message_id: i32 = -1;
     let mut next_message_payload_length: i32 = -1;
 
     while data_index < parse_result.message_length + data_offset {
         data_parse_state = match data_parse_state {
             NDEFParseState::MessageHeader => {
-                next_message_message_block = parse_ndef_message_block(data[data_index]);
-                data_index += 1;
-
-                next_message_type_length = data[data_index].into();
-                data_index += 1;
-
-                if next_message_message_block.short_record {
-                    next_message_payload_length = data[data_index].into();
-                    data_index += 1;
-                } else {
-                    next_message_payload_length = ((i32::from(data[data_index])) << 24)
-                        + (i32::from(data[data_index + 1]) << 16)
-                        + (i32::from(data[data_index + 2]) << 8)
-                        + i32::from(data[data_index + 3]);
-                    data_index += 4;
-                }
-
-                next_message_id_length = -1;
-
-                if next_message_message_block.id_length {
-                    next_message_id_length = data[data_index].into();
-                    data_index += 1;
-                }
+                let meta = read_message_header(data, &mut data_index);
+                next_message_message_block = meta.block;
+                next_message_type_length = meta.type_len;
+                next_message_payload_length = meta.payload_len;
+                next_message_id_length = meta.id_len;
 
                 NDEFParseState::MessageType
             }
             NDEFParseState::MessageType => {
-                next_message_type = 0;
-
-                for n in (0..next_message_type_length).rev() {
-                    next_message_type += i32::from(data[data_index]) << (n * 8);
-                    data_index += 1;
-                }
+                next_message_type =
+                    read_message_type(data, &mut data_index, next_message_type_length);
 
                 if next_message_message_block.id_length {
                     NDEFParseState::MessageID
@@ -123,12 +186,7 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
                 }
             }
             NDEFParseState::MessageID => {
-                //next_message_id = 0;
-
-                for _ in (0..next_message_id_length).rev() {
-                    //next_message_id += (data[data_index] as i32) << (n * 8);
-                    data_index += 1;
-                }
+                skip_message_id(&mut data_index, next_message_id_length);
 
                 NDEFParseState::MessagePayload
             }
@@ -146,44 +204,13 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
                 parse_result.records[parse_record_index].payload_type =
                     PayloadType::from(next_message_type);
 
-                for _ in 0..next_message_payload_length {
-                    parse_result.records[parse_record_index]
-                        .raw_data
-                        .push(data[data_index]);
-                    data_index += 1;
-                }
-
-                match parse_result.records[parse_record_index].payload_type {
-                    PayloadType::Text => {
-                        let encoding_length = parse_result.records[parse_record_index].raw_data[0];
-
-                        for i in (encoding_length as usize + 1)
-                            ..parse_result.records[parse_record_index].raw_data.len()
-                        {
-                            let parsed_char =
-                                parse_result.records[parse_record_index].raw_data[i] as char;
-
-                            parse_result.records[parse_record_index]
-                                .data
-                                .push(parsed_char);
-                        }
-                    }
-                    PayloadType::URL => {
-                        parse_result.records[parse_record_index].data = String::from(
-                            get_uri_protocol(parse_result.records[parse_record_index].raw_data[0]),
-                        );
-
-                        for i in 1..parse_result.records[parse_record_index].raw_data.len() {
-                            let parsed_char =
-                                parse_result.records[parse_record_index].raw_data[i] as char;
-
-                            parse_result.records[parse_record_index]
-                                .data
-                                .push(parsed_char);
-                        }
-                    }
-                    PayloadType::Unknown => {}
-                }
+                let raw_data =
+                    read_payload_bytes(data, &mut data_index, next_message_payload_length);
+                parse_result.records[parse_record_index].raw_data = raw_data;
+                parse_result.records[parse_record_index].data = decode_payload(
+                    parse_result.records[parse_record_index].payload_type,
+                    &parse_result.records[parse_record_index].raw_data,
+                );
 
                 if next_message_message_block.message_end && !next_message_message_block.chunk_flag
                 {
