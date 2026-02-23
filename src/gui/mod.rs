@@ -241,7 +241,11 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         update_opacity(&mut rejected_opacity, show && msg == 2, delta_time);
         update_opacity(&mut net_error_opacity, show && msg == 3, delta_time);
         update_opacity(&mut nfc_error_opacity, show && msg == 4, delta_time);
-        update_opacity(&mut doorhw_not_ready_error_opacity, show && msg == 5, delta_time);
+        update_opacity(
+            &mut doorhw_not_ready_error_opacity,
+            show && msg == 5,
+            delta_time,
+        );
 
         draw_welcome_window(
             welcome_opacity as u8,

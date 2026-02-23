@@ -118,7 +118,10 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
             AuthState::Idle => YELLOW_ACCENT(255),
             AuthState::Pending => YELLOW_ACCENT(255),
             AuthState::Valid => GREEN_CL,
-            AuthState::Invalid | AuthState::NetError | AuthState::NFCError | AuthState::DoorHWNotReady => RED_CL,
+            AuthState::Invalid
+            | AuthState::NetError
+            | AuthState::NFCError
+            | AuthState::DoorHWNotReady => RED_CL,
         },
         delta_time * 10.0,
     );

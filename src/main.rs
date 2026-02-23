@@ -7,14 +7,16 @@ pub mod timedvariable;
 #[cfg(not(debug_assertions))]
 mod updater;
 
-use std::env;
+use std::{env, time::Duration};
 
+use async_tungstenite::{tokio::connect_async, tungstenite::Message};
 use auth::auth_entry;
+use futures::prelude::*;
 use tokio::{
     sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task,
+    time::sleep,
 };
-use tungstenite::{Message, connect};
 
 use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener};
 
@@ -59,21 +61,25 @@ async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
     }
 }
 
-fn ws_entry(opener_tx: UnboundedSender<()>) {
-    let (mut socket, _resp) = match connect("wss://api.purduehackers.com/phonebell/door-opener") {
-        Ok(x) => x,
-        Err(e) => {
-            eprintln!("Failed to connect to API WebSocket: {e}");
-            return;
-        }
-    };
+async fn ws_entry(opener_tx: UnboundedSender<()>) {
+    let (mut socket, _resp) =
+        match connect_async("wss://api.purduehackers.com/phonebell/door-opener").await {
+            Ok(x) => x,
+            Err(e) => {
+                eprintln!("Failed to connect to API WebSocket: {e}");
+                return;
+            }
+        };
 
-    socket
-        .write(tungstenite::Message::Text(
+    let (write, read) = socket.split();
+
+    write
+        .send(tungstenite::Message::Text(
             env::var("DOOR_OPENER_API_KEY")
                 .expect("door opener API key")
                 .into(),
         ))
+        .await
         .expect("write auth");
 
     #[derive(Debug, serde::Deserialize)]
@@ -82,18 +88,27 @@ fn ws_entry(opener_tx: UnboundedSender<()>) {
         Open,
     }
 
-    while let Ok(msg) = socket.read() {
-        match msg {
-            Message::Text(t) => {
-                if let Ok(msg) = serde_json::from_str(t.as_ref()) {
-                    match msg {
-                        WebSocketMessage::Open => {
-                            let _ = opener_tx.send(());
+    loop {
+        tokio::select! {
+            _ = sleep(Duration::from_millis(500)) => {
+                write.send(Message::Ping(Default::default())).await.expect("ping");
+            }
+            msg = read.next() => {
+                match msg {
+                    Some(Ok(Message::Text(t))) => {
+                        if let Ok(msg) = serde_json::from_str(t.as_ref()) {
+                            match msg {
+                                WebSocketMessage::Open => {
+                                    let _ = opener_tx.send(());
+                                }
+                            }
                         }
                     }
+                    Some(Err(e)) => eprintln!("Received err: {e:?}"),
+                    None => break,
+                    _ => eprintln!("Unsupported message received! {msg:?}"),
                 }
             }
-            _ => eprintln!("Unsupported message received! {msg:?}"),
         }
     }
 
