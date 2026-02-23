@@ -8,7 +8,7 @@ use colors::{BLACK_BG, WHITE_CL, YELLOW_ACCENT};
 use macroquad::prelude::*;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use self::{font_engine::draw_text, passport::draw_passport};
+use self::{font_engine::draw_text, passport::PassportData, passport::draw_passport};
 use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVariable};
 
 use AuthState::{DoorHWNotReady, Idle, Invalid, NFCError, NetError, Pending, Valid};
@@ -24,6 +24,13 @@ impl AnimationEvent {
         Self {
             state: None,
             triggered: false,
+        }
+    }
+
+    fn reset_trigger() -> Self {
+        Self {
+            state: None,
+            triggered: true,
         }
     }
 }
@@ -94,12 +101,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
     let mut show_welcome: TimedVariable<bool> = TimedVariable::new(true);
     let mut active_message: TimedVariable<i32> = TimedVariable::new(0);
 
-    let mut welcome_opacity: f32 = 255.0;
-    let mut accepted_opacity: f32 = 0.0;
-    let mut rejected_opacity: f32 = 0.0;
-    let mut net_error_opacity: f32 = 0.0;
-    let mut nfc_error_opacity: f32 = 0.0;
-    let mut doorhw_not_ready_error_opacity: f32 = 0.0;
+    let mut opacities = MessageOpacities::default();
 
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
 
@@ -116,205 +118,263 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
     loop {
         let check_time = get_time();
-
-        animating_auth_state.check_for_updates(check_time);
-        auth_state.check_for_updates(check_time);
-        show_welcome.check_for_updates(check_time);
-        active_message.check_for_updates(check_time);
-
-        if animating_auth_state.get().triggered {
-            animating_auth_state.set(
-                AnimationEvent {
-                    triggered: false,
-                    ..animating_auth_state.get()
-                },
-                -1.0,
-            );
-
-            if let Some(anim_state) = animating_auth_state.get().state {
-                match anim_state {
-                    // Welcome screen
-                    Idle => {
-                        auth_state.set(AuthState::Idle, -1.0);
-                        show_welcome.set(true, -1.0);
-
-                        animating_auth_state.set(
-                            AnimationEvent {
-                                state: None,
-                                triggered: true,
-                            },
-                            1.0,
-                        );
-                    }
-                    // Loading screen
-                    Pending => {
-                        show_welcome.set(false, -1.0);
-                        active_message.set(0, -1.0);
-
-                        auth_state.set(AuthState::Pending, 0.5);
-                        animating_auth_state.set(
-                            AnimationEvent {
-                                state: None,
-                                triggered: true,
-                            },
-                            1.5,
-                        ); // after previous + 1.0s
-                    }
-                    // Verified passport screen
-                    Valid => {
-                        auth_state.set(AuthState::Valid, -1.0);
-                        active_message.set(1, -1.0);
-
-                        show_welcome.set(true, 1.5);
-                        active_message.set(0, 6.5); // after welcome + 5.0s
-                        animating_auth_state.set(
-                            AnimationEvent {
-                                state: None,
-                                triggered: true,
-                            },
-                            2.0,
-                        ); // after welcome + 0.5s
-                    }
-                    // Error screens
-                    Invalid | NetError | NFCError | DoorHWNotReady => {
-                        let msg_id = match anim_state {
-                            Invalid => 2,
-                            NetError => 3,
-                            NFCError => 4,
-                            DoorHWNotReady => 5,
-                            _ => unreachable!(),
-                        };
-                        auth_state.set(anim_state, -1.0);
-                        active_message.set(msg_id, -1.0);
-
-                        show_welcome.set(true, 1.5);
-                        active_message.set(0, 11.5); // after welcome + 10.0s
-                        animating_auth_state.set(
-                            AnimationEvent {
-                                state: None,
-                                triggered: true,
-                            },
-                            2.0,
-                        ); // after previous + 0.5s
-                    }
-                }
-            }
-        }
-
-        if animating_auth_state.get().triggered || queued_auth_state.triggered {
-            // i think i fixed it // if animations progress too fast, this is probably the problem lmao
-            animating_auth_state.set(
-                AnimationEvent {
-                    triggered: false,
-                    ..animating_auth_state.get()
-                },
-                -1.0,
-            );
-            queued_auth_state.triggered = false;
-
-            if animating_auth_state.get().state.is_none() && queued_auth_state.state.is_some() {
-                animating_auth_state.set(
-                    AnimationEvent {
-                        state: queued_auth_state.state,
-                        triggered: true,
-                    },
-                    -1.0,
-                );
-
-                queued_auth_state = AnimationEvent::new();
-            }
-        }
-
-        if let Ok(x) = nfc_messages.try_recv() {
-            queued_auth_state = AnimationEvent {
-                state: Some(x),
-                triggered: true,
-            };
-        } else {
-            // probably display the error message somehow
-        }
+        update_timed_variables(
+            check_time,
+            &mut animating_auth_state,
+            &mut auth_state,
+            &mut show_welcome,
+            &mut active_message,
+        );
+        process_animation_state(
+            &mut animating_auth_state,
+            &mut auth_state,
+            &mut show_welcome,
+            &mut active_message,
+        );
+        advance_queued_animation(&mut animating_auth_state, &mut queued_auth_state);
+        receive_nfc_message(&mut nfc_messages, &mut queued_auth_state);
 
         let delta_time: f32 = get_frame_time();
-
         clear_background(Color::from_hex(0x000a_0a0a));
 
         background::draw_background(&background_data);
-
-        let show = show_welcome.get();
-        let msg = active_message.get();
-        update_opacity(&mut welcome_opacity, show && msg == 0, delta_time);
-        update_opacity(&mut accepted_opacity, show && msg == 1, delta_time);
-        update_opacity(&mut rejected_opacity, show && msg == 2, delta_time);
-        update_opacity(&mut net_error_opacity, show && msg == 3, delta_time);
-        update_opacity(&mut nfc_error_opacity, show && msg == 4, delta_time);
-        update_opacity(
-            &mut doorhw_not_ready_error_opacity,
-            show && msg == 5,
+        update_message_opacities(
+            &mut opacities,
+            show_welcome.get(),
+            active_message.get(),
             delta_time,
         );
-
-        draw_welcome_window(
-            opacity_to_u8(welcome_opacity),
-            &segoe_ui,
-            &doorbell_qr,
-            &doorbell_qr_pointer,
-        );
-        draw_accepted_window(opacity_to_u8(accepted_opacity), &segoe_ui);
-        draw_error_window(
-            opacity_to_u8(rejected_opacity),
-            &segoe_ui,
-            &doorbell_qr,
-            "Invalid Passport!",
-            "Please try again or scan the QR code to ring the doorbell manually!",
-        );
-        draw_error_window(
-            opacity_to_u8(net_error_opacity),
-            &segoe_ui,
-            &doorbell_qr,
-            "Something went wrong!",
-            "We're having connectivity issues at the moment. Please try again.",
-        );
-        draw_error_window(
-            opacity_to_u8(nfc_error_opacity),
-            &segoe_ui,
-            &doorbell_qr,
-            "NFC read error!",
-            "Please take away your passport, then hold it still during the scan!",
-        );
-        draw_error_window(
-            opacity_to_u8(doorhw_not_ready_error_opacity),
-            &segoe_ui,
-            &doorbell_qr,
-            "Button pusher not ready yet!",
-            "Try again after a minute or contact an organizer.",
-        );
-
-        draw_passport(
-            360.0,
-            match auth_state.get() {
-                AuthState::Pending => 360.0,
-                AuthState::Valid => -1200.0,
-                _ => 1200.0,
-            },
-            auth_state.get(),
-            &mut passport_data,
-        );
+        draw_message_windows(&opacities, &segoe_ui, &doorbell_qr, &doorbell_qr_pointer);
+        draw_passport_for_state(auth_state.get(), &mut passport_data);
 
         #[cfg(debug_assertions)]
-        if is_key_pressed(KeyCode::Space) {
-            println!("Opening door for debugging purposes...");
-            queued_auth_state = AnimationEvent {
-                state: Some(Valid),
-                triggered: true,
-            };
-            let _ = opener_tx.send(());
-        }
+        handle_debug_open(&mut queued_auth_state, &opener_tx);
 
         if is_key_down(KeyCode::Escape) {
             return;
         }
 
         next_frame().await;
+    }
+}
+
+struct MessageOpacities {
+    welcome: f32,
+    accepted: f32,
+    rejected: f32,
+    net_error: f32,
+    nfc_error: f32,
+    doorhw_not_ready_error: f32,
+}
+
+impl Default for MessageOpacities {
+    fn default() -> Self {
+        Self {
+            welcome: 255.0,
+            accepted: 0.0,
+            rejected: 0.0,
+            net_error: 0.0,
+            nfc_error: 0.0,
+            doorhw_not_ready_error: 0.0,
+        }
+    }
+}
+
+fn update_timed_variables(
+    check_time: f64,
+    animating_auth_state: &mut TimedVariable<AnimationEvent>,
+    auth_state: &mut TimedVariable<AuthState>,
+    show_welcome: &mut TimedVariable<bool>,
+    active_message: &mut TimedVariable<i32>,
+) {
+    animating_auth_state.check_for_updates(check_time);
+    auth_state.check_for_updates(check_time);
+    show_welcome.check_for_updates(check_time);
+    active_message.check_for_updates(check_time);
+}
+
+fn process_animation_state(
+    animating_auth_state: &mut TimedVariable<AnimationEvent>,
+    auth_state: &mut TimedVariable<AuthState>,
+    show_welcome: &mut TimedVariable<bool>,
+    active_message: &mut TimedVariable<i32>,
+) {
+    if !animating_auth_state.get().triggered {
+        return;
+    }
+
+    animating_auth_state.set(
+        AnimationEvent {
+            triggered: false,
+            ..animating_auth_state.get()
+        },
+        -1.0,
+    );
+
+    if let Some(anim_state) = animating_auth_state.get().state {
+        match anim_state {
+            Idle => {
+                auth_state.set(AuthState::Idle, -1.0);
+                show_welcome.set(true, -1.0);
+                animating_auth_state.set(AnimationEvent::reset_trigger(), 1.0);
+            }
+            Pending => {
+                show_welcome.set(false, -1.0);
+                active_message.set(0, -1.0);
+
+                auth_state.set(AuthState::Pending, 0.5);
+                animating_auth_state.set(AnimationEvent::reset_trigger(), 1.5);
+            }
+            Valid => {
+                auth_state.set(AuthState::Valid, -1.0);
+                active_message.set(1, -1.0);
+
+                show_welcome.set(true, 1.5);
+                active_message.set(0, 6.5);
+                animating_auth_state.set(AnimationEvent::reset_trigger(), 2.0);
+            }
+            Invalid | NetError | NFCError | DoorHWNotReady => {
+                let msg_id = match anim_state {
+                    Invalid => 2,
+                    NetError => 3,
+                    NFCError => 4,
+                    DoorHWNotReady => 5,
+                    _ => unreachable!(),
+                };
+                auth_state.set(anim_state, -1.0);
+                active_message.set(msg_id, -1.0);
+
+                show_welcome.set(true, 1.5);
+                active_message.set(0, 11.5);
+                animating_auth_state.set(AnimationEvent::reset_trigger(), 2.0);
+            }
+        }
+    }
+}
+
+fn advance_queued_animation(
+    animating_auth_state: &mut TimedVariable<AnimationEvent>,
+    queued_auth_state: &mut AnimationEvent,
+) {
+    if !(animating_auth_state.get().triggered || queued_auth_state.triggered) {
+        return;
+    }
+
+    // if animations progress too fast, this is probably the problem
+    animating_auth_state.set(
+        AnimationEvent {
+            triggered: false,
+            ..animating_auth_state.get()
+        },
+        -1.0,
+    );
+    queued_auth_state.triggered = false;
+
+    if animating_auth_state.get().state.is_none() && queued_auth_state.state.is_some() {
+        animating_auth_state.set(
+            AnimationEvent {
+                state: queued_auth_state.state,
+                triggered: true,
+            },
+            -1.0,
+        );
+        *queued_auth_state = AnimationEvent::new();
+    }
+}
+
+fn receive_nfc_message(
+    nfc_messages: &mut UnboundedReceiver<AuthState>,
+    queued_auth_state: &mut AnimationEvent,
+) {
+    if let Ok(x) = nfc_messages.try_recv() {
+        *queued_auth_state = AnimationEvent {
+            state: Some(x),
+            triggered: true,
+        };
+    } else {
+        // probably display the error message somehow
+    }
+}
+
+fn update_message_opacities(
+    opacities: &mut MessageOpacities,
+    show: bool,
+    msg: i32,
+    delta_time: f32,
+) {
+    update_opacity(&mut opacities.welcome, show && msg == 0, delta_time);
+    update_opacity(&mut opacities.accepted, show && msg == 1, delta_time);
+    update_opacity(&mut opacities.rejected, show && msg == 2, delta_time);
+    update_opacity(&mut opacities.net_error, show && msg == 3, delta_time);
+    update_opacity(&mut opacities.nfc_error, show && msg == 4, delta_time);
+    update_opacity(
+        &mut opacities.doorhw_not_ready_error,
+        show && msg == 5,
+        delta_time,
+    );
+}
+
+fn draw_message_windows(
+    opacities: &MessageOpacities,
+    font: &Font,
+    doorbell_qr: &Texture2D,
+    doorbell_qr_pointer: &Texture2D,
+) {
+    draw_welcome_window(
+        opacity_to_u8(opacities.welcome),
+        font,
+        doorbell_qr,
+        doorbell_qr_pointer,
+    );
+    draw_accepted_window(opacity_to_u8(opacities.accepted), font);
+    draw_error_window(
+        opacity_to_u8(opacities.rejected),
+        font,
+        doorbell_qr,
+        "Invalid Passport!",
+        "Please try again or scan the QR code to ring the doorbell manually!",
+    );
+    draw_error_window(
+        opacity_to_u8(opacities.net_error),
+        font,
+        doorbell_qr,
+        "Something went wrong!",
+        "We're having connectivity issues at the moment. Please try again.",
+    );
+    draw_error_window(
+        opacity_to_u8(opacities.nfc_error),
+        font,
+        doorbell_qr,
+        "NFC read error!",
+        "Please take away your passport, then hold it still during the scan!",
+    );
+    draw_error_window(
+        opacity_to_u8(opacities.doorhw_not_ready_error),
+        font,
+        doorbell_qr,
+        "Button pusher not ready yet!",
+        "Try again after a minute or contact an organizer.",
+    );
+}
+
+fn draw_passport_for_state(auth_state: AuthState, passport_data: &mut PassportData) {
+    let target_y = match auth_state {
+        AuthState::Pending => 360.0,
+        AuthState::Valid => -1200.0,
+        _ => 1200.0,
+    };
+    draw_passport(360.0, target_y, auth_state, passport_data);
+}
+
+#[cfg(debug_assertions)]
+fn handle_debug_open(queued_auth_state: &mut AnimationEvent, opener_tx: &UnboundedSender<()>) {
+    if is_key_pressed(KeyCode::Space) {
+        println!("Opening door for debugging purposes...");
+        *queued_auth_state = AnimationEvent {
+            state: Some(Valid),
+            triggered: true,
+        };
+        let _ = opener_tx.send(());
     }
 }
 
