@@ -39,7 +39,7 @@ pub enum NDEFParseState {
 }
 
 struct NextMessageMeta {
-    block: MessageBlock,
+    block: MessageHeader,
     type_len: i32,
     payload_len: i32,
     id_len: i32,
@@ -52,7 +52,7 @@ fn read_message_header(data: &[u8], data_index: &mut usize) -> NextMessageMeta {
     let type_len = data[*data_index].into();
     *data_index += 1;
 
-    let payload_len = if block.short_record {
+    let payload_len = if block.short_record() {
         let len = data[*data_index].into();
         *data_index += 1;
         len
@@ -65,7 +65,7 @@ fn read_message_header(data: &[u8], data_index: &mut usize) -> NextMessageMeta {
         len
     };
 
-    let id_len = if block.id_length {
+    let id_len = if block.has_id_length() {
         let len = data[*data_index].into();
         *data_index += 1;
         len
@@ -151,14 +151,7 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
     let mut data_index: usize = data_offset;
     let mut data_parse_state: NDEFParseState = NDEFParseState::MessageHeader;
 
-    let mut next_message_message_block: MessageBlock = MessageBlock {
-        //message_begin: false,
-        message_end: false,
-        chunk_flag: false,
-        short_record: false,
-        id_length: false,
-        //type_name_format: 0
-    };
+    let mut next_message_message_block = MessageHeader(0);
     let mut next_message_type_length: i32 = -1;
     let mut next_message_type: i32 = -1;
     let mut next_message_id_length: i32 = -1;
@@ -179,7 +172,7 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
                 next_message_type =
                     read_message_type(data, &mut data_index, next_message_type_length);
 
-                if next_message_message_block.id_length {
+                if next_message_message_block.has_id_length() {
                     NDEFParseState::MessageID
                 } else {
                     NDEFParseState::MessagePayload
@@ -191,7 +184,7 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
                 NDEFParseState::MessagePayload
             }
             NDEFParseState::MessagePayload => {
-                if !next_message_message_block.chunk_flag
+                if !next_message_message_block.chunked()
                     || parse_result.records.len() <= parse_record_index
                 {
                     parse_result.records.push(PayloadValue {
@@ -212,11 +205,11 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
                     &parse_result.records[parse_record_index].raw_data,
                 );
 
-                if next_message_message_block.message_end && !next_message_message_block.chunk_flag
+                if next_message_message_block.message_end() && !next_message_message_block.chunked()
                 {
                     break;
                 }
-                if !next_message_message_block.chunk_flag {
+                if !next_message_message_block.chunked() {
                     parse_record_index += 1;
                 }
 
@@ -227,26 +220,30 @@ pub fn parse_nfc_data(data: &[u8]) -> ParseResult {
     parse_result
 }
 
-#[derive(Debug)]
-pub struct MessageBlock {
-    //pub message_begin: bool,
-    pub message_end: bool,
-    pub chunk_flag: bool,
-    pub short_record: bool,
-    pub id_length: bool,
-    //pub type_name_format: u8
+#[derive(Debug, Clone, Copy)]
+pub struct MessageHeader(u8);
+
+impl MessageHeader {
+    fn message_end(self) -> bool {
+        (self.0 & 0b0100_0000) != 0
+    }
+
+    fn chunked(self) -> bool {
+        (self.0 & 0b0010_0000) != 0
+    }
+
+    fn short_record(self) -> bool {
+        (self.0 & 0b0001_0000) != 0
+    }
+
+    fn has_id_length(self) -> bool {
+        (self.0 & 0b0000_1000) != 0
+    }
 }
 
 #[must_use]
-pub fn parse_ndef_message_block(byte: u8) -> MessageBlock {
-    MessageBlock {
-        //message_begin: (byte & 0b10000000) != 0,
-        message_end: (byte & 0b0100_0000) != 0,
-        chunk_flag: (byte & 0b0010_0000) != 0,
-        short_record: (byte & 0b0001_0000) != 0,
-        id_length: (byte & 0b0000_1000) != 0,
-        //type_name_format: byte & 0b00000111
-    }
+pub fn parse_ndef_message_block(byte: u8) -> MessageHeader {
+    MessageHeader(byte)
 }
 
 #[must_use]
