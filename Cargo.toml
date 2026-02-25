@@ -8,7 +8,7 @@ edition = "2024"
 [dependencies]
 macroquad = "0.4.14"
 resvg = "0.47.0"
-nfc1 = { version = "=0.6.0", default-features = false, features = [] }
+nfc1 = { version = "=0.7.0", default-features = false, features = [] }
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
 serde = { version = "1.0.228", features = ["derive"] }
@@ -23,7 +23,7 @@ futures = "0.3.32"
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
-nfc1 = { version = "=0.6.0", default-features=false, features = [ "vendored" ] }
+nfc1 = { version = "=0.7.0", default-features=false, features = [ "vendored" ] }
 
 [lints.clippy]
 pedantic = "deny"
