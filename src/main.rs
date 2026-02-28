@@ -105,6 +105,7 @@ async fn ws_entry(opener_tx: UnboundedSender<()>) {
                             }
                         }
                     }
+                    Some(Ok(Message::Ping(_))) | Some(Ok(Message::Pong(_))) => {},
                     Some(Err(e)) => eprintln!("Received err: {e:?}"),
                     None => break,
                     _ => eprintln!("Unsupported message received! {msg:?}"),
