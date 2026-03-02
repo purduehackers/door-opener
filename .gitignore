@@ -6,3 +6,6 @@ result
 
 # direnv
 .direnv
+
+# Ignore .DS_Store
+.DS_Store
