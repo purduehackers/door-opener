@@ -9,3 +9,6 @@ result
 
 # Ignore .DS_Store
 .DS_Store
+
+# Ignore Autodesk Inventor old versions
+**/OldVersions/**
