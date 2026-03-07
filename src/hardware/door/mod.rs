@@ -29,20 +29,14 @@ async fn open_with_retry(module: &mut (dyn OpenModule + Send)) -> bool {
         match module.open_door().await {
             Ok(()) => return true,
             Err(e) => {
-                eprintln!(
-                    "open_door failed (attempt {}/{}): {e}",
-                    attempt, OPEN_DOOR_MAX_RETRIES
-                );
+                eprintln!("open_door failed (attempt {attempt}/{OPEN_DOOR_MAX_RETRIES}): {e}");
                 if attempt < OPEN_DOOR_MAX_RETRIES {
                     time::sleep(OPEN_DOOR_RETRY_DELAY).await;
                 }
             }
         }
     }
-    eprintln!(
-        "open_door failed after {} attempts, re-initializing module",
-        OPEN_DOOR_MAX_RETRIES
-    );
+    eprintln!("open_door failed after {OPEN_DOOR_MAX_RETRIES} attempts, re-initializing module");
     false
 }
 
@@ -56,7 +50,8 @@ fn spawn_ada_pusher_init() -> tokio::sync::oneshot::Receiver<Box<dyn OpenModule 
 }
 
 impl DoorOpener {
-    pub async fn new(auth_tx: UnboundedSender<AuthState>) -> DoorOpener {
+    #[must_use]
+    pub fn new(auth_tx: UnboundedSender<AuthState>) -> DoorOpener {
         let (tx, mut rx) = unbounded_channel::<()>();
 
         task::spawn(async move {
@@ -77,7 +72,7 @@ impl DoorOpener {
                             }
                             msg = rx.recv() => {
                                 match msg {
-                                    Some(_) => {
+                                    Some(()) => {
                                         if let Some(ref mut m) = module {
                                             if !open_with_retry(m.as_mut()).await {
                                                 module = None;
@@ -96,7 +91,7 @@ impl DoorOpener {
                 }
 
                 match rx.recv().await {
-                    Some(_) => {
+                    Some(()) => {
                         if let Some(ref mut m) = module {
                             if !open_with_retry(m.as_mut()).await {
                                 module = None;

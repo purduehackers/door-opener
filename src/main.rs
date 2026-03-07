@@ -49,7 +49,7 @@ async fn main() {
 }
 
 async fn opener_entry(mut opener_rx: UnboundedReceiver<()>, auth_tx: UnboundedSender<AuthState>) {
-    let door_opener = DoorOpener::new(auth_tx).await;
+    let door_opener = DoorOpener::new(auth_tx);
     loop {
         if opener_rx.recv().await.is_some() {
             println!("opener_entry: received open message");
