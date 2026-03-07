@@ -2,12 +2,14 @@
 use std::env;
 
 use std::error::Error;
-use std::fs::File;
-use std::io::Write;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 
 use reqwest::Client;
 use semver::Version;
 use serde_json::Value;
+
+use self_replace::self_replace;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -32,12 +34,16 @@ pub async fn update_check() -> bool {
             "We are out of date; the latest version is {} and we are at {}",
             latest_version, current_version
         );
-        if perform_update().await.is_ok() {
-            println!("Update successful!");
-            true
-        } else {
-            println!("Update failed!");
-            false
+        let update_result = perform_update().await;
+        match update_result {
+            Ok(()) => {
+                println!("Update successful!");
+                true
+            }
+            Err(e) => {
+                eprintln!("Update failed: {e}");
+                false
+            }
         }
     } else {
         println!("No update required; current version is {}", current_version);
@@ -92,9 +98,12 @@ async fn perform_update() -> Result<()> {
     let response = client.get(&url).send().await?;
     let artifact = response.bytes().await?.to_vec();
 
-    // Replace the current executable with the downloaded artifact
-    let mut file = File::create(&current_executable_path)?;
-    file.write_all(&artifact)?;
+    // Save file temporarily
+    let temp_path = current_executable_path.with_extension("tmp");
+    let mut temp_file = File::create(&temp_path).await?;
+    temp_file.write_all(&artifact).await?;
+    
+    self_replace(temp_path)?;
 
     Ok(())
 }
