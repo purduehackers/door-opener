@@ -10,7 +10,7 @@ pub mod websocket;
 
 use auth::auth_entry;
 use tokio::{
-    sync::mpsc::{UnboundedReceiver, unbounded_channel},
+    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task,
 };
 
@@ -33,6 +33,7 @@ async fn main() {
     let (opener_tx, opener_rx) = unbounded_channel::<()>();
     let auth_opener = opener_tx.clone();
     let gui_opener = opener_tx.clone();
+    let door_auth_tx = auth_tx.clone();
 
     task::spawn_blocking(move || {
         auth_entry(&auth_tx, &auth_opener);
@@ -42,13 +43,13 @@ async fn main() {
         let _ = opener_tx.send(());
     }));
 
-    task::spawn(opener_entry(opener_rx));
+    task::spawn(opener_entry(opener_rx, door_auth_tx));
 
     gui_entry(gui_rx, gui_opener);
 }
 
-async fn opener_entry(mut opener_rx: UnboundedReceiver<()>) {
-    let door_opener = DoorOpener::new();
+async fn opener_entry(mut opener_rx: UnboundedReceiver<()>, auth_tx: UnboundedSender<AuthState>) {
+    let door_opener = DoorOpener::new(auth_tx).await;
     loop {
         if opener_rx.recv().await.is_some() {
             println!("opener_entry: received open message");

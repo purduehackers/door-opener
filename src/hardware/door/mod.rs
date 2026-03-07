@@ -1,14 +1,19 @@
 mod ada_pusher;
 
 use std::error::Error;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use tokio::{
     sync::mpsc::{UnboundedSender, unbounded_channel},
-    task,
+    task, time,
 };
 
+use crate::enums::AuthState;
 use crate::hardware::door::ada_pusher::AdaPusher;
+
+const OPEN_DOOR_MAX_RETRIES: u32 = 3;
+const OPEN_DOOR_RETRY_DELAY: Duration = Duration::from_secs(1);
 
 pub struct DoorOpener {
     tx: UnboundedSender<()>,
@@ -19,43 +24,98 @@ trait OpenModule {
     async fn open_door(&mut self) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 
+async fn open_with_retry(module: &mut (dyn OpenModule + Send)) -> bool {
+    for attempt in 1..=OPEN_DOOR_MAX_RETRIES {
+        match module.open_door().await {
+            Ok(()) => return true,
+            Err(e) => {
+                eprintln!(
+                    "open_door failed (attempt {}/{}): {e}",
+                    attempt, OPEN_DOOR_MAX_RETRIES
+                );
+                if attempt < OPEN_DOOR_MAX_RETRIES {
+                    time::sleep(OPEN_DOOR_RETRY_DELAY).await;
+                }
+            }
+        }
+    }
+    eprintln!(
+        "open_door failed after {} attempts, re-initializing module",
+        OPEN_DOOR_MAX_RETRIES
+    );
+    false
+}
+
+fn spawn_ada_pusher_init() -> tokio::sync::oneshot::Receiver<Box<dyn OpenModule + Send>> {
+    let (init_tx, init_rx) = tokio::sync::oneshot::channel::<Box<dyn OpenModule + Send>>();
+    task::spawn(async move {
+        let pusher = AdaPusher::new().await;
+        let _ = init_tx.send(Box::new(pusher));
+    });
+    init_rx
+}
+
 impl DoorOpener {
-    #[must_use]
-    pub fn new() -> DoorOpener {
+    pub async fn new(auth_tx: UnboundedSender<AuthState>) -> DoorOpener {
         let (tx, mut rx) = unbounded_channel::<()>();
 
         task::spawn(async move {
-            let mut module: Box<dyn OpenModule + Send> = Box::new(AdaPusher::new().await);
+            let mut module: Option<Box<dyn OpenModule + Send>> = None;
+            let init_rx = spawn_ada_pusher_init();
+            let mut init_rx = Some(init_rx);
 
             loop {
-                match rx.recv().await {
-                    Some(()) => {
-                        println!("Inner thread received message!");
-                        match module.open_door().await {
-                            Ok(()) => (),
-                            Err(e) => {
-                                eprintln!("Failed to open door, error: {e:?}");
+                {
+                    if let Some(ref mut irx) = init_rx {
+                        tokio::select! {
+                            result = irx => {
+                                if let Ok(m) = result {
+                                    module = Some(m);
+                                    println!("Door module initialized successfully!");
+                                }
+                                init_rx = None;
+                            }
+                            msg = rx.recv() => {
+                                match msg {
+                                    Some(_) => {
+                                        if let Some(ref mut m) = module {
+                                            if !open_with_retry(m.as_mut()).await {
+                                                module = None;
+                                                init_rx = Some(spawn_ada_pusher_init());
+                                            }
+                                        } else {
+                                            let _ = auth_tx.send(AuthState::DoorHWNotReady);
+                                        }
+                                    }
+                                    None => return,
+                                }
                             }
                         }
+                        continue;
                     }
-                    None => {
-                        eprintln!("Received nothing...");
+                }
+
+                match rx.recv().await {
+                    Some(_) => {
+                        if let Some(ref mut m) = module {
+                            if !open_with_retry(m.as_mut()).await {
+                                module = None;
+                                {
+                                    init_rx = Some(spawn_ada_pusher_init());
+                                }
+                            }
+                        } else {
+                            let _ = auth_tx.send(AuthState::DoorHWNotReady);
+                        }
                     }
+                    None => return,
                 }
             }
         });
-        println!("General door opener initialization complete; ready to receive messages");
         Self { tx }
     }
 
     pub fn open(&self) {
-        println!("Received open command, sending to inner thread...");
         let _ = self.tx.send(());
-    }
-}
-
-impl Default for DoorOpener {
-    fn default() -> Self {
-        Self::new()
     }
 }
