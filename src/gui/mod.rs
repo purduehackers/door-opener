@@ -147,6 +147,8 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         draw_message_windows(&opacities, &segoe_ui, &doorbell_qr, &doorbell_qr_pointer);
         draw_passport_for_state(auth_state.get(), &mut passport_data);
 
+        #[cfg(not(debug_assertions))]
+        let _ = &opener_tx;
         #[cfg(debug_assertions)]
         handle_debug_open(&mut queued_auth_state, &opener_tx);
 
