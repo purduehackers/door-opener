@@ -102,7 +102,7 @@ async fn perform_update() -> Result<()> {
     let temp_path = current_executable_path.with_extension("tmp");
     let mut temp_file = File::create(&temp_path).await?;
     temp_file.write_all(&artifact).await?;
-    
+
     self_replace(temp_path)?;
 
     Ok(())
