@@ -42,14 +42,18 @@ const SCREEN_WIDTH: f32 = 720.0;
 const SCREEN_HEIGHT: f32 = 720.0;
 const TEXT_MARGIN: f32 = 32.0;
 
+const OPACITY_MIN: f32 = 0.0;
+const OPACITY_MAX: f32 = 255.0;
+
 fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
     let direction = if active { 1.0 } else { -1.0 };
-    *opacity = (*opacity + 255.0 * 2.0 * direction * delta_time).clamp(0.0, 255.0);
+    *opacity =
+        (*opacity + OPACITY_MAX * 2.0 * direction * delta_time).clamp(OPACITY_MIN, OPACITY_MAX);
 }
 
 #[allow(clippy::cast_possible_truncation)]
 fn opacity_to_u8(opacity: f32) -> u8 {
-    let clamped = opacity.clamp(0.0, 255.0).round() as i32;
+    let clamped = opacity.clamp(OPACITY_MIN, OPACITY_MAX).round() as i32;
     u8::try_from(clamped).unwrap_or(0)
 }
 
