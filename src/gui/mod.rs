@@ -99,7 +99,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
         TimedVariable::new(AnimationEvent::new());
     let mut auth_state: TimedVariable<AuthState> = TimedVariable::new(AuthState::Idle);
     let mut show_welcome: TimedVariable<bool> = TimedVariable::new(true);
-    let mut active_message: TimedVariable<i32> = TimedVariable::new(0);
+    let mut active_message: TimedVariable<AuthState> = TimedVariable::new(AuthState::Idle);
 
     let mut opacities = MessageOpacities::default();
 
@@ -187,7 +187,7 @@ fn update_timed_variables(
     animating_auth_state: &mut TimedVariable<AnimationEvent>,
     auth_state: &mut TimedVariable<AuthState>,
     show_welcome: &mut TimedVariable<bool>,
-    active_message: &mut TimedVariable<i32>,
+    active_message: &mut TimedVariable<AuthState>,
 ) {
     animating_auth_state.check_for_updates(check_time);
     auth_state.check_for_updates(check_time);
@@ -199,7 +199,7 @@ fn process_animation_state(
     animating_auth_state: &mut TimedVariable<AnimationEvent>,
     auth_state: &mut TimedVariable<AuthState>,
     show_welcome: &mut TimedVariable<bool>,
-    active_message: &mut TimedVariable<i32>,
+    active_message: &mut TimedVariable<AuthState>,
 ) {
     if !animating_auth_state.get().triggered {
         return;
@@ -222,32 +222,24 @@ fn process_animation_state(
             }
             Pending => {
                 show_welcome.set(false, -1.0);
-                active_message.set(0, -1.0);
-
+                active_message.set(AuthState::Idle, -1.0);
                 auth_state.set(AuthState::Pending, 0.5);
                 animating_auth_state.set(AnimationEvent::reset_trigger(), 1.5);
             }
             Valid => {
                 auth_state.set(AuthState::Valid, -1.0);
-                active_message.set(1, -1.0);
+                active_message.set(AuthState::Valid, -1.0);
 
                 show_welcome.set(true, 1.5);
-                active_message.set(0, 6.5);
+                active_message.set(AuthState::Idle, 6.5);
                 animating_auth_state.set(AnimationEvent::reset_trigger(), 2.0);
             }
             Invalid | NetError | NFCError | DoorHWNotReady => {
-                let msg_id = match anim_state {
-                    Invalid => 2,
-                    NetError => 3,
-                    NFCError => 4,
-                    DoorHWNotReady => 5,
-                    _ => unreachable!(),
-                };
                 auth_state.set(anim_state, -1.0);
-                active_message.set(msg_id, -1.0);
+                active_message.set(anim_state, -1.0);
 
                 show_welcome.set(true, 1.5);
-                active_message.set(0, 11.5);
+                active_message.set(AuthState::Idle, 11.5);
                 animating_auth_state.set(AnimationEvent::reset_trigger(), 2.0);
             }
         }
@@ -301,17 +293,37 @@ fn receive_nfc_message(
 fn update_message_opacities(
     opacities: &mut MessageOpacities,
     show: bool,
-    msg: i32,
+    auth_state: AuthState,
     delta_time: f32,
 ) {
-    update_opacity(&mut opacities.welcome, show && msg == 0, delta_time);
-    update_opacity(&mut opacities.accepted, show && msg == 1, delta_time);
-    update_opacity(&mut opacities.rejected, show && msg == 2, delta_time);
-    update_opacity(&mut opacities.net_error, show && msg == 3, delta_time);
-    update_opacity(&mut opacities.nfc_error, show && msg == 4, delta_time);
+    update_opacity(
+        &mut opacities.welcome,
+        show && auth_state == AuthState::Idle,
+        delta_time,
+    );
+    update_opacity(
+        &mut opacities.accepted,
+        show && auth_state == AuthState::Valid,
+        delta_time,
+    );
+    update_opacity(
+        &mut opacities.rejected,
+        show && auth_state == AuthState::Invalid,
+        delta_time,
+    );
+    update_opacity(
+        &mut opacities.net_error,
+        show && auth_state == AuthState::NetError,
+        delta_time,
+    );
+    update_opacity(
+        &mut opacities.nfc_error,
+        show && auth_state == AuthState::NFCError,
+        delta_time,
+    );
     update_opacity(
         &mut opacities.doorhw_not_ready_error,
-        show && msg == 5,
+        show && auth_state == AuthState::DoorHWNotReady,
         delta_time,
     );
 }
