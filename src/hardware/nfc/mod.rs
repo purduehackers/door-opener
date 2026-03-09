@@ -1,3 +1,5 @@
+#![cfg(feature = "nfc_reader")]
+
 use std::time::Duration;
 
 use nfc1::{Context, Device, Error, Target, target_info::TargetInfo};

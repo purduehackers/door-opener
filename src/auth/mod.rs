@@ -1,12 +1,18 @@
+#[cfg(feature = "nfc_reader")]
 use std::{thread, time::Duration};
 
 use reqwest::{Error, StatusCode};
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{enums::AuthState, hardware::nfc::NFCReader};
+use crate::enums::AuthState;
 
+#[cfg(feature = "nfc_reader")]
+use crate::hardware::nfc::NFCReader;
+
+#[cfg(feature = "nfc_reader")]
 use AuthState::{Idle, Invalid, NFCError, NetError, Pending, Valid};
 
+#[cfg(feature = "nfc_reader")]
 /// Authentication thread
 ///
 /// # Panics
@@ -53,6 +59,12 @@ pub fn auth_entry(gui_sender: &UnboundedSender<AuthState>, opener_tx: &Unbounded
         thread::sleep(Duration::from_millis(300));
     }
 }
+
+/// Dummy authentication module
+///
+/// Enabled if NFC feature is disabled
+#[cfg(not(feature = "nfc_reader"))]
+pub fn auth_entry(_gui_sender: &UnboundedSender<AuthState>, _opener_tx: &UnboundedSender<()>) {}
 
 /// Checks for passport validity
 ///
