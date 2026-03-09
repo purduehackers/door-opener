@@ -4,7 +4,7 @@ pub mod font_engine;
 pub mod passport;
 pub mod svg;
 
-use colors::{BLACK_BG, WHITE_CL, YELLOW_ACCENT};
+use colors::{BLACK_BG, YELLOW_ACCENT};
 use macroquad::prelude::*;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
@@ -36,8 +36,6 @@ impl AnimationEvent {
 }
 
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
-const DOORBELL_QR: &[u8] = include_bytes!("./assets/doorbell-qr.png");
-const DOORBELL_QR_POINTER: &[u8] = include_bytes!("./assets/qr-pointer.svg");
 
 fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
     let direction = if active { 1.0 } else { -1.0 };
@@ -50,18 +48,7 @@ fn opacity_to_u8(opacity: f32) -> u8 {
     u8::try_from(clamped).unwrap_or(0)
 }
 
-fn draw_texture_sized(texture: &Texture2D, x: f32, y: f32, color: Color, w: f32, h: f32) {
-    draw_texture_ex(
-        texture,
-        x,
-        y,
-        color,
-        DrawTextureParams {
-            dest_size: Some(Vec2 { x: w, y: h }),
-            ..Default::default()
-        },
-    );
-}
+
 
 #[must_use]
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
@@ -105,15 +92,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
 
     let segoe_ui = load_ttf_font_from_bytes(SEGOE_UI_FONT).unwrap();
 
-    let doorbell_qr: Texture2D = Texture2D::from_file_with_format(DOORBELL_QR, None);
-    let doorbell_qr_pointer = svg::svg_to_texture(
-        String::from_utf8(DOORBELL_QR_POINTER.to_vec())
-            .unwrap()
-            .as_str(),
-    );
-
     let background_data = background::initialise_background();
-
     let mut passport_data = passport::initialise_passport();
 
     loop {
@@ -144,7 +123,7 @@ async fn gui_main(mut nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unb
             active_message.get(),
             delta_time,
         );
-        draw_message_windows(&opacities, &segoe_ui, &doorbell_qr, &doorbell_qr_pointer);
+        draw_message_windows(&opacities, &segoe_ui);
         draw_passport_for_state(auth_state.get(), &mut passport_data);
 
         #[cfg(not(debug_assertions))]
@@ -328,44 +307,30 @@ fn update_message_opacities(
     );
 }
 
-fn draw_message_windows(
-    opacities: &MessageOpacities,
-    font: &Font,
-    doorbell_qr: &Texture2D,
-    doorbell_qr_pointer: &Texture2D,
-) {
-    draw_welcome_window(
-        opacity_to_u8(opacities.welcome),
-        font,
-        doorbell_qr,
-        doorbell_qr_pointer,
-    );
+fn draw_message_windows(opacities: &MessageOpacities, font: &Font) {
+    draw_welcome_window(opacity_to_u8(opacities.welcome), font);
     draw_accepted_window(opacity_to_u8(opacities.accepted), font);
     draw_error_window(
         opacity_to_u8(opacities.rejected),
         font,
-        doorbell_qr,
         "Invalid Passport!",
-        "Please try again or scan the QR code to ring the doorbell manually!",
+        "Please try to scan your passport again!",
     );
     draw_error_window(
         opacity_to_u8(opacities.net_error),
         font,
-        doorbell_qr,
         "Something went wrong!",
         "We're having connectivity issues at the moment. Please try again.",
     );
     draw_error_window(
         opacity_to_u8(opacities.nfc_error),
         font,
-        doorbell_qr,
         "NFC read error!",
         "Please take away your passport, then hold it still during the scan!",
     );
     draw_error_window(
         opacity_to_u8(opacities.doorhw_not_ready_error),
         font,
-        doorbell_qr,
         "Button pusher not ready yet!",
         "Try again after a minute or contact an organizer.",
     );
@@ -392,12 +357,7 @@ fn handle_debug_open(queued_auth_state: &mut AnimationEvent, opener_tx: &Unbound
     }
 }
 
-fn draw_welcome_window(
-    opacity: u8,
-    font: &Font,
-    doorbell_qr: &Texture2D,
-    doorbell_qr_pointer: &Texture2D,
-) {
+fn draw_welcome_window(opacity: u8, font: &Font) {
     draw_rectangle(0.0, 164.0, 720.0, 392.0, BLACK_BG(opacity));
     draw_rectangle(0.0, 164.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
     draw_rectangle(0.0, 552.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
@@ -419,16 +379,6 @@ fn draw_welcome_window(
         font,
         48,
         1.0,
-    );
-
-    draw_texture_sized(doorbell_qr, 580.0, 422.0, WHITE_CL(opacity), 96.0, 96.0);
-    draw_texture_sized(
-        doorbell_qr_pointer,
-        540.0,
-        358.0,
-        WHITE_CL(opacity),
-        160.0,
-        64.0,
     );
 }
 
@@ -457,13 +407,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
     );
 }
 
-fn draw_error_window(
-    opacity: u8,
-    font: &Font,
-    doorbell_qr: &Texture2D,
-    title: &str,
-    subtitle: &str,
-) {
+fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
     draw_rectangle(0.0, 140.0, 720.0, 440.0, BLACK_BG(opacity));
     draw_rectangle(0.0, 140.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
     draw_rectangle(0.0, 576.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
@@ -486,6 +430,4 @@ fn draw_error_window(
         48,
         1.0,
     );
-
-    draw_texture_sized(doorbell_qr, 500.0, 179.0, WHITE_CL(opacity), 192.0, 192.0);
 }
