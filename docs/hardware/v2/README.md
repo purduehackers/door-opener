@@ -6,8 +6,8 @@ v2 is comprised of a more simplified design compared to v1, with the back plate
 that is designed to slide out entirely. This allows for easier access during
 maintenance.
 
-The screw holding the back plate to the enclosure is an M3, with a length of ?
-mm. The screw head is a ?.
+The screw holding the back plate to the enclosure is an M3, with a length of 20
+mm. The screw head is a Torx T10.
 
 Once removed, the Raspberry Pi with the touchscreen module should be visible.
 The red NFC module should be to the bottom left, and the camera module should be
