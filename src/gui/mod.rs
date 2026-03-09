@@ -375,7 +375,7 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
         1.0,
     );
     let _ = draw_text(
-        "Scan your passport to start",
+        "Scan your passport or pick up the phone",
         Point::new(TEXT_MARGIN, 422.0),
         SCREEN_WIDTH - TEXT_MARGIN - 188.0,
         YELLOW_ACCENT(opacity),
