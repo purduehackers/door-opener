@@ -55,7 +55,7 @@ pub fn draw_background(background_data: &BackgroundData) {
         .set_texture("logo_texture", background_data.logo_texture.clone());
 
     gl_use_material(&background_data.material);
-    draw_rectangle(0.0, 0.0, 720.0, 720.0, WHITE);
+    draw_rectangle(0.0, 0.0, screen_width(), screen_height(), WHITE);
     gl_use_default_material();
 }
 
@@ -69,7 +69,7 @@ uniform mat4 Model;
 uniform mat4 Projection;
 
 void main() {
-    pixel_coord = texcoord * vec2(720.0, 720.0);
+    pixel_coord = position.xy;
 
     gl_Position = Projection * Model * vec4(position, 1);
 }
