@@ -1,3 +1,5 @@
+#![cfg(feature = "ada_pusher")]
+
 use std::collections::BTreeSet;
 use std::error::Error;
 use std::time::Duration;

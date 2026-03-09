@@ -1,4 +1,7 @@
+#[cfg(feature = "ada_pusher")]
 mod ada_pusher;
+#[cfg(not(feature = "ada_pusher"))]
+mod dummy;
 
 use std::error::Error;
 use std::time::Duration;
@@ -10,7 +13,10 @@ use tokio::{
 };
 
 use crate::enums::AuthState;
+#[cfg(feature = "ada_pusher")]
 use crate::hardware::door::ada_pusher::AdaPusher;
+#[cfg(not(feature = "ada_pusher"))]
+use crate::hardware::door::dummy::Dummy;
 
 const OPEN_DOOR_MAX_RETRIES: u32 = 3;
 const OPEN_DOOR_RETRY_DELAY: Duration = Duration::from_secs(1);
@@ -40,6 +46,7 @@ async fn open_with_retry(module: &mut (dyn OpenModule + Send)) -> bool {
     false
 }
 
+#[cfg(feature = "ada_pusher")]
 fn spawn_ada_pusher_init() -> tokio::sync::oneshot::Receiver<Box<dyn OpenModule + Send>> {
     let (init_tx, init_rx) = tokio::sync::oneshot::channel::<Box<dyn OpenModule + Send>>();
     task::spawn(async move {
@@ -49,14 +56,25 @@ fn spawn_ada_pusher_init() -> tokio::sync::oneshot::Receiver<Box<dyn OpenModule 
     init_rx
 }
 
+#[cfg(not(feature = "ada_pusher"))]
+fn spawn_dummy_init() -> tokio::sync::oneshot::Receiver<Box<dyn OpenModule + Send>> {
+    let (init_tx, init_rx) = tokio::sync::oneshot::channel::<Box<dyn OpenModule + Send>>();
+    task::spawn(async move {
+        let _ = init_tx.send(Box::new(Dummy {}));
+    });
+    init_rx
+}
+
 impl DoorOpener {
     #[must_use]
+    #[cfg(feature = "ada_pusher")]
     pub fn new(auth_tx: UnboundedSender<AuthState>) -> DoorOpener {
         let (tx, mut rx) = unbounded_channel::<()>();
 
         task::spawn(async move {
             let mut module: Option<Box<dyn OpenModule + Send>> = None;
             let init_rx = spawn_ada_pusher_init();
+
             let mut init_rx = Some(init_rx);
 
             loop {
@@ -97,6 +115,68 @@ impl DoorOpener {
                                 module = None;
                                 {
                                     init_rx = Some(spawn_ada_pusher_init());
+                                }
+                            }
+                        } else {
+                            let _ = auth_tx.send(AuthState::DoorHWNotReady);
+                        }
+                    }
+                    None => return,
+                }
+            }
+        });
+        Self { tx }
+    }
+
+    #[must_use]
+    #[cfg(not(feature = "ada_pusher"))]
+    pub fn new(auth_tx: UnboundedSender<AuthState>) -> DoorOpener {
+        let (tx, mut rx) = unbounded_channel::<()>();
+
+        task::spawn(async move {
+            let mut module: Option<Box<dyn OpenModule + Send>> = None;
+            let init_rx = spawn_dummy_init();
+
+            let mut init_rx = Some(init_rx);
+
+            loop {
+                {
+                    if let Some(ref mut irx) = init_rx {
+                        tokio::select! {
+                            result = irx => {
+                                if let Ok(m) = result {
+                                    module = Some(m);
+                                    println!("Dummy door module initialized successfully!");
+                                }
+                                init_rx = None;
+                            }
+                            msg = rx.recv() => {
+                                match msg {
+                                    Some(()) => {
+                                        if let Some(ref mut m) = module {
+                                            if !open_with_retry(m.as_mut()).await {
+                                                module = None;
+                                                init_rx = Some(spawn_dummy_init());
+                                            }
+                                        } else {
+                                            let _ = auth_tx.send(AuthState::DoorHWNotReady);
+                                        }
+                                    }
+                                    None => return,
+                                }
+                            }
+                        }
+                        continue;
+                    }
+                }
+
+                match rx.recv().await {
+                    Some(()) => {
+                        if let Some(ref mut m) = module {
+                            if !open_with_retry(m.as_mut()).await {
+                                module = None;
+                                {
+                                    init_rx = Some(spawn_dummy_init());
                                 }
                             }
                         } else {
