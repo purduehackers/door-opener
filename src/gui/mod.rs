@@ -368,7 +368,7 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
     let _ = draw_text(
         "Welcome to Hack Night",
         Point::new(TEXT_MARGIN, 203.0),
-        SCREEN_WIDTH - TEXT_MARGIN - 40.0,
+        SCREEN_WIDTH - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         96,
@@ -377,7 +377,7 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
     let _ = draw_text(
         "Scan your passport or pick up the phone",
         Point::new(TEXT_MARGIN, 422.0),
-        SCREEN_WIDTH - TEXT_MARGIN - 188.0,
+        SCREEN_WIDTH - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         48,
@@ -393,7 +393,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
     let _ = draw_text(
         "Welcome back!",
         Point::new(TEXT_MARGIN, 251.0),
-        648.0,
+        SCREEN_WIDTH - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         96,
@@ -402,7 +402,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
     let _ = draw_text(
         "Please be mindful of the door opening",
         Point::new(TEXT_MARGIN, 374.0),
-        648.0,
+        SCREEN_WIDTH - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         48,
@@ -418,7 +418,7 @@ fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
     let _ = draw_text(
         title,
         Point::new(TEXT_MARGIN, 179.0),
-        420.0,
+        SCREEN_WIDTH - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         96,
@@ -427,7 +427,7 @@ fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
     let _ = draw_text(
         subtitle,
         Point::new(TEXT_MARGIN, 398.0),
-        648.0,
+        SCREEN_WIDTH - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         48,
