@@ -37,6 +37,11 @@ impl AnimationEvent {
 
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 
+// TODO: change those out once sizes have been refactored
+const SCREEN_WIDTH: f32 = 720.0;
+const SCREEN_HEIGHT: f32 = 720.0;
+const TEXT_MARGIN: f32 = 32.0;
+
 fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
     let direction = if active { 1.0 } else { -1.0 };
     *opacity = (*opacity + 255.0 * 2.0 * direction * delta_time).clamp(0.0, 255.0);
@@ -47,8 +52,6 @@ fn opacity_to_u8(opacity: f32) -> u8 {
     let clamped = opacity.clamp(0.0, 255.0).round() as i32;
     u8::try_from(clamped).unwrap_or(0)
 }
-
-
 
 #[must_use]
 pub fn float32_lerp(source: f32, destination: f32, percent: f32) -> f32 {
@@ -358,14 +361,14 @@ fn handle_debug_open(queued_auth_state: &mut AnimationEvent, opener_tx: &Unbound
 }
 
 fn draw_welcome_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 164.0, 720.0, 392.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 164.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 552.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
+    draw_rectangle(0.0, 164.0, SCREEN_WIDTH, 392.0, BLACK_BG(opacity));
+    draw_rectangle(0.0, 164.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
+    draw_rectangle(0.0, 552.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
 
     let _ = draw_text(
         "Welcome to Hack Night",
-        Point::new(32.0, 203.0),
-        648.0,
+        Point::new(TEXT_MARGIN, 203.0),
+        SCREEN_WIDTH - TEXT_MARGIN - 40.0,
         YELLOW_ACCENT(opacity),
         font,
         96,
@@ -373,8 +376,8 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
     );
     let _ = draw_text(
         "Scan your passport to start",
-        Point::new(32.0, 422.0),
-        500.0,
+        Point::new(TEXT_MARGIN, 422.0),
+        SCREEN_WIDTH - TEXT_MARGIN - 188.0,
         YELLOW_ACCENT(opacity),
         font,
         48,
@@ -389,7 +392,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
 
     let _ = draw_text(
         "Welcome back!",
-        Point::new(32.0, 251.0),
+        Point::new(TEXT_MARGIN, 251.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -398,7 +401,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
     );
     let _ = draw_text(
         "Please be mindful of the door opening",
-        Point::new(32.0, 374.0),
+        Point::new(TEXT_MARGIN, 374.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -408,13 +411,13 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
 }
 
 fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
-    draw_rectangle(0.0, 140.0, 720.0, 440.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 140.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 576.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
+    draw_rectangle(0.0, 140.0, SCREEN_WIDTH, 440.0, BLACK_BG(opacity));
+    draw_rectangle(0.0, 140.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
+    draw_rectangle(0.0, 576.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
 
     let _ = draw_text(
         title,
-        Point::new(32.0, 179.0),
+        Point::new(TEXT_MARGIN, 179.0),
         420.0,
         YELLOW_ACCENT(opacity),
         font,
@@ -423,7 +426,7 @@ fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
     );
     let _ = draw_text(
         subtitle,
-        Point::new(32.0, 398.0),
+        Point::new(TEXT_MARGIN, 398.0),
         648.0,
         YELLOW_ACCENT(opacity),
         font,
