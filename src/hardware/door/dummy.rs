@@ -1,5 +1,3 @@
-#![cfg(not(feature = "ada_pusher"))]
-
 use std::error::Error;
 
 use async_trait::async_trait;
