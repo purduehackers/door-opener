@@ -72,6 +72,7 @@ pub fn colour_lerp(source: Color, destination: Color, percent: f32) -> Color {
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: UnboundedSender<()>) {
     macroquad::Window::from_config(
         Conf {
