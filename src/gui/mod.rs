@@ -391,9 +391,9 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
 }
 
 fn draw_accepted_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 212.0, 720.0, 296.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 212.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 504.0, 720.0, 4.0, YELLOW_ACCENT(opacity));
+    draw_rectangle(0.0, 212.0, SCREEN_WIDTH, 296.0, BLACK_BG(opacity));
+    draw_rectangle(0.0, 212.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
+    draw_rectangle(0.0, 504.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
 
     let _ = draw_text(
         "Welcome back!",
