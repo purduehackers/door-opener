@@ -4,13 +4,17 @@ pub mod font_engine;
 pub mod passport;
 pub mod svg;
 
-use colors::{BLACK_BG, YELLOW_ACCENT};
+mod constants;
+mod windows;
+
 use macroquad::prelude::*;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use self::{font_engine::draw_text, passport::PassportData, passport::draw_passport};
-use crate::{enums::AuthState, gui::font_engine::Point, timedvariable::TimedVariable};
+use self::constants::{OPACITY_MAX, OPACITY_MIN, SCREEN_HEIGHT, SCREEN_WIDTH};
+use self::{passport::PassportData, passport::draw_passport};
 
+use crate::gui::windows::draw_message_windows;
+use crate::{enums::AuthState, timedvariable::TimedVariable};
 use AuthState::{DoorHWNotReady, Idle, Invalid, NFCError, NetError, Pending, Valid};
 
 #[derive(Copy, Clone, Debug)]
@@ -37,24 +41,10 @@ impl AnimationEvent {
 
 const SEGOE_UI_FONT: &[u8] = include_bytes!("./assets/SegoeUI.ttf");
 
-// TODO: change those out once sizes have been refactored
-const SCREEN_WIDTH: f32 = 720.0;
-const SCREEN_HEIGHT: f32 = 720.0;
-const TEXT_MARGIN: f32 = 32.0;
-
-const OPACITY_MIN: f32 = 0.0;
-const OPACITY_MAX: f32 = 255.0;
-
 fn update_opacity(opacity: &mut f32, active: bool, delta_time: f32) {
     let direction = if active { 1.0 } else { -1.0 };
     *opacity =
         (*opacity + OPACITY_MAX * 2.0 * direction * delta_time).clamp(OPACITY_MIN, OPACITY_MAX);
-}
-
-#[allow(clippy::cast_possible_truncation)]
-fn opacity_to_u8(opacity: f32) -> u8 {
-    let clamped = opacity.clamp(OPACITY_MIN, OPACITY_MAX).round() as i32;
-    u8::try_from(clamped).unwrap_or(0)
 }
 
 #[must_use]
@@ -315,35 +305,6 @@ fn update_message_opacities(
     );
 }
 
-fn draw_message_windows(opacities: &MessageOpacities, font: &Font) {
-    draw_welcome_window(opacity_to_u8(opacities.welcome), font);
-    draw_accepted_window(opacity_to_u8(opacities.accepted), font);
-    draw_error_window(
-        opacity_to_u8(opacities.rejected),
-        font,
-        "Invalid Passport!",
-        "Please try to scan your passport again!",
-    );
-    draw_error_window(
-        opacity_to_u8(opacities.net_error),
-        font,
-        "Something went wrong!",
-        "We're having connectivity issues at the moment. Please try again.",
-    );
-    draw_error_window(
-        opacity_to_u8(opacities.nfc_error),
-        font,
-        "NFC read error!",
-        "Please take away your passport, then hold it still during the scan!",
-    );
-    draw_error_window(
-        opacity_to_u8(opacities.doorhw_not_ready_error),
-        font,
-        "Button pusher not ready yet!",
-        "Try again after a minute or contact an organizer.",
-    );
-}
-
 fn draw_passport_for_state(auth_state: AuthState, passport_data: &mut PassportData) {
     let target_y = match auth_state {
         AuthState::Pending => 360.0,
@@ -363,79 +324,4 @@ fn handle_debug_open(queued_auth_state: &mut AnimationEvent, opener_tx: &Unbound
         };
         let _ = opener_tx.send(());
     }
-}
-
-fn draw_welcome_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 164.0, SCREEN_WIDTH, 392.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 164.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 552.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
-
-    let _ = draw_text(
-        "Welcome to Hack Night",
-        Point::new(TEXT_MARGIN, 203.0),
-        SCREEN_WIDTH - TEXT_MARGIN,
-        YELLOW_ACCENT(opacity),
-        font,
-        96,
-        1.0,
-    );
-    let _ = draw_text(
-        "Scan your passport or dial the phone bell",
-        Point::new(TEXT_MARGIN, 422.0),
-        SCREEN_WIDTH - TEXT_MARGIN,
-        YELLOW_ACCENT(opacity),
-        font,
-        48,
-        1.0,
-    );
-}
-
-fn draw_accepted_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 212.0, SCREEN_WIDTH, 296.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 212.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 504.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
-
-    let _ = draw_text(
-        "Welcome back!",
-        Point::new(TEXT_MARGIN, 251.0),
-        SCREEN_WIDTH - TEXT_MARGIN,
-        YELLOW_ACCENT(opacity),
-        font,
-        96,
-        1.0,
-    );
-    let _ = draw_text(
-        "Please be mindful of the door opening",
-        Point::new(TEXT_MARGIN, 374.0),
-        SCREEN_WIDTH - TEXT_MARGIN,
-        YELLOW_ACCENT(opacity),
-        font,
-        48,
-        1.0,
-    );
-}
-
-fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
-    draw_rectangle(0.0, 140.0, SCREEN_WIDTH, 440.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 140.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 576.0, SCREEN_WIDTH, 4.0, YELLOW_ACCENT(opacity));
-
-    let _ = draw_text(
-        title,
-        Point::new(TEXT_MARGIN, 179.0),
-        SCREEN_WIDTH - TEXT_MARGIN,
-        YELLOW_ACCENT(opacity),
-        font,
-        96,
-        1.0,
-    );
-    let _ = draw_text(
-        subtitle,
-        Point::new(TEXT_MARGIN, 398.0),
-        SCREEN_WIDTH - TEXT_MARGIN,
-        YELLOW_ACCENT(opacity),
-        font,
-        48,
-        1.0,
-    );
 }
