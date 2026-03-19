@@ -67,9 +67,7 @@ pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unbounde
     macroquad::Window::from_config(
         Conf {
             window_title: "Door Opener".to_owned(),
-            fullscreen: false,
-            window_width: 720.0 as i32,
-            window_height: 720.0 as i32,
+            fullscreen: true,
             window_resizable: false,
             sample_count: 0,
             ..Default::default()
