@@ -68,8 +68,8 @@ pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unbounde
         Conf {
             window_title: "Door Opener".to_owned(),
             fullscreen: false,
-            window_width: screen_width() as i32,
-            window_height: screen_height() as i32,
+            window_width: 720.0 as i32,
+            window_height: 720.0 as i32,
             window_resizable: false,
             sample_count: 0,
             ..Default::default()
