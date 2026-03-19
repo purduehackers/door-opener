@@ -10,7 +10,7 @@ mod windows;
 use macroquad::prelude::*;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use self::constants::{OPACITY_MAX, OPACITY_MIN, SCREEN_HEIGHT, SCREEN_WIDTH};
+use self::constants::{OPACITY_MAX, OPACITY_MIN};
 use self::{passport::PassportData, passport::draw_passport};
 
 use crate::gui::windows::draw_message_windows;
@@ -68,8 +68,8 @@ pub fn gui_entry(nfc_messages: UnboundedReceiver<AuthState>, opener_tx: Unbounde
         Conf {
             window_title: "Door Opener".to_owned(),
             fullscreen: false,
-            window_width: SCREEN_WIDTH as i32,
-            window_height: SCREEN_HEIGHT as i32,
+            window_width: screen_width() as i32,
+            window_height: screen_height() as i32,
             window_resizable: false,
             sample_count: 0,
             ..Default::default()
