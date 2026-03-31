@@ -13,8 +13,8 @@ Once removed, the Raspberry Pi with the touchscreen module should be visible.
 The red NFC module should be to the bottom left, and the camera module should be
 to the bottom right.
 
-The touchscreen module should be held in with 4x M2.5 screws, ? mm in length.
-The screw head is a ?.
+The touchscreen module should be held in with 4x M2.5 screws, 10 mm in length.
+The screw head is a Torx T?.
 
 The red PN532 NFC module should be held in with 2x M3 screws, 5.8 mm in length.
 The screw head is a Philips PH1 type.
