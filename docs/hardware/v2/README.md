@@ -41,3 +41,5 @@ dimensions are as follows:
 
 Notes:
 - Raspberry Pi 5 should be usable with ? GB RAM variant.
+
+## [Assembly Instructions](./assembly.md)
