@@ -21,6 +21,7 @@ semver = "1.0.27"
 async-tungstenite = { version = "0.34.0", features = ["tokio-runtime", "tokio-rustls-webpki-roots"] }
 futures = "0.3.32"
 self-replace = "1.5.0"
+sentry = "0.47.0"
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
