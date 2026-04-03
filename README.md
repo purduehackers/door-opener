@@ -19,6 +19,25 @@ door opener. SSH into the door opener, pull any changes, and run `cargo build --
 If you are a member of Purdue Hackers and would like to contribute to door opener,
 contact an organizer for SSH details!
 
+To connect `door-opener` to Purdue's Wi-Fi, use the following command, replacing
+the username and password:
+
+```
+nmcli connection add \
+    type wifi \
+    con-name "PAL3.0" \
+    ifname wlan0 \
+    ssid "PAL3.0" \
+    -- \
+    wifi-sec.key-mgmt wpa-eap \
+    802-1x.eap peap \
+    802-1x.phase2-auth mschapv2 \
+    802-1x.identity "[username]" \
+    802-1x.password "[password]" \
+    802-1x.system-ca-certs yes
+nmcli connection up "PAL3.0"
+```
+
 If you are imaging a new door opener, install the following dependencies:
 
 - `libssl-dev`
