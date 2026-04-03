@@ -4,6 +4,9 @@ use std::{thread, time::Duration};
 use reqwest::{Error, StatusCode};
 use tokio::sync::mpsc::UnboundedSender;
 
+#[cfg(feature = "nfc_reader")]
+use nfc1::Error as NFC1Error;
+
 use crate::enums::AuthState;
 
 #[cfg(feature = "nfc_reader")]
@@ -19,7 +22,17 @@ use AuthState::{Idle, Invalid, NFCError, NetError, Pending, Valid};
 ///
 /// Will panic if the NFC reader cannot be initialized
 pub fn auth_entry(gui_sender: &UnboundedSender<AuthState>, opener_tx: &UnboundedSender<()>) {
-    let mut nfc_reader: NFCReader = NFCReader::new().expect("Failed to initialize NFC reader");
+    let nfc_reader_res: Result<NFCReader, NFC1Error> = NFCReader::new();
+
+    // Early return if NFC device is not available
+    if nfc_reader_res
+        .as_ref()
+        .is_err_and(|e| e == &NFC1Error::NoDeviceFound)
+    {
+        return;
+    }
+
+    let mut nfc_reader = nfc_reader_res.expect("Failed to initialize NFC reader");
 
     loop {
         if let Ok(target) = nfc_reader.poll() {
