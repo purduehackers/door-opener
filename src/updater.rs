@@ -19,8 +19,9 @@ pub async fn update_check() -> bool {
     let latest_version = Version::parse(
         get_latest_version()
             .await
-            .unwrap_or_else(|_| {
+            .unwrap_or_else(|e| {
                 eprintln!("Failed to fetch latest version from GitHub!");
+                sentry::capture_error(&*e);
                 String::from("0.0.0")
             })
             .as_str(),
