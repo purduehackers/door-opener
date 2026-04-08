@@ -305,11 +305,11 @@ fn update_message_opacities(
 
 fn draw_passport_for_state(auth_state: AuthState, passport_data: &mut PassportData) {
     let target_y = match auth_state {
-        AuthState::Pending => 360.0,
-        AuthState::Valid => -1200.0,
-        _ => 1200.0,
+        AuthState::Pending => screen_height() / 2.0,
+        AuthState::Valid => screen_height() * -2.0,
+        _ => screen_height() * 2.0,
     };
-    draw_passport(360.0, target_y, auth_state, passport_data);
+    draw_passport(screen_width() / 2.0, target_y, auth_state, passport_data);
 }
 
 #[cfg(debug_assertions)]
