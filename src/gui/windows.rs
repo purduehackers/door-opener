@@ -11,6 +11,14 @@ fn opacity_to_u8(opacity: f32) -> u8 {
     u8::try_from(clamped).unwrap_or(0)
 }
 
+fn get_heading_text_size() -> u16 {
+    if screen_height() < 720.0 { 72 } else { 96 }
+}
+
+fn get_desc_text_size() -> u16 {
+    if screen_height() < 720.0 { 32 } else { 48 }
+}
+
 pub fn draw_message_windows(opacities: &MessageOpacities, font: &Font) {
     draw_welcome_window(opacity_to_u8(opacities.welcome), font);
     draw_accepted_window(opacity_to_u8(opacities.accepted), font);
@@ -82,7 +90,7 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
-        96,
+        get_heading_text_size(),
         1.0,
     );
 
@@ -93,7 +101,7 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
-        48,
+        get_desc_text_size(),
         1.0,
     );
 }
@@ -115,7 +123,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
-        96,
+        get_heading_text_size(),
         1.0,
     );
 
@@ -126,7 +134,7 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
-        48,
+        get_desc_text_size(),
         1.0,
     );
 }
@@ -148,7 +156,7 @@ fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
-        96,
+        get_heading_text_size(),
         1.0,
     );
 
@@ -159,7 +167,7 @@ fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
-        48,
+        get_desc_text_size(),
         1.0,
     );
 }
