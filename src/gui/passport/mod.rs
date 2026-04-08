@@ -177,11 +177,10 @@ fn draw_loading_spinner(loading_spinner_angle: f32, passport_data: &PassportData
         },
         DrawTextureParams {
             dest_size: Some(vec2(passport_side_length, passport_side_length)),
-            source: Option::None,
             rotation: loading_spinner_angle,
             flip_x: true,
             flip_y: true,
-            pivot: Option::None,
+            ..Default::default()
         },
     );
 
@@ -192,11 +191,8 @@ fn draw_loading_spinner(loading_spinner_angle: f32, passport_data: &PassportData
         passport_data.current_spinner_colour,
         DrawTextureParams {
             dest_size: Some(vec2(passport_side_length, passport_side_length)),
-            source: Option::None,
             rotation: loading_spinner_angle,
-            flip_x: false,
-            flip_y: false,
-            pivot: Option::None,
+            ..Default::default()
         },
     );
 }
