@@ -40,23 +40,56 @@ pub fn draw_message_windows(opacities: &MessageOpacities, font: &Font) {
     );
 }
 
-fn draw_welcome_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 164.0, screen_width(), 392.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 164.0, screen_width(), 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 552.0, screen_width(), 4.0, YELLOW_ACCENT(opacity));
+fn draw_message_box(opacity: u8, margin_percentage: f32, content_percentage: f32) {
+    let height = screen_height();
+    draw_rectangle(
+        0.0,
+        height * margin_percentage,
+        screen_width(),
+        height * content_percentage,
+        BLACK_BG(opacity),
+    );
+    draw_rectangle(
+        0.0,
+        height * margin_percentage,
+        screen_width(),
+        4.0,
+        YELLOW_ACCENT(opacity),
+    );
+    draw_rectangle(
+        0.0,
+        height * (margin_percentage + content_percentage),
+        screen_width(),
+        4.0,
+        YELLOW_ACCENT(opacity),
+    );
+}
 
+fn draw_welcome_window(opacity: u8, font: &Font) {
+    let top_bottom_margin_percentage = 0.23;
+    let main_content_percentage = 1.0 - top_bottom_margin_percentage * 2.0;
+    draw_message_box(
+        opacity,
+        top_bottom_margin_percentage,
+        main_content_percentage,
+    );
+
+    let height = screen_height();
+    let heading_start_percentage = 0.28;
     let _ = draw_text(
         "Welcome to Hack Night",
-        Point::new(TEXT_MARGIN, 203.0),
+        Point::new(TEXT_MARGIN, height * heading_start_percentage),
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         96,
         1.0,
     );
+
+    let desc_start_percentage = 0.58;
     let _ = draw_text(
         "Scan your passport or dial the phone bell",
-        Point::new(TEXT_MARGIN, 422.0),
+        Point::new(TEXT_MARGIN, height * desc_start_percentage),
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
@@ -66,22 +99,30 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
 }
 
 fn draw_accepted_window(opacity: u8, font: &Font) {
-    draw_rectangle(0.0, 212.0, screen_width(), 296.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 212.0, screen_width(), 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 504.0, screen_width(), 4.0, YELLOW_ACCENT(opacity));
+    let top_bottom_margin_percentage = 0.29;
+    let main_content_percentage = 1.0 - top_bottom_margin_percentage * 2.0;
+    draw_message_box(
+        opacity,
+        top_bottom_margin_percentage,
+        main_content_percentage,
+    );
 
+    let height = screen_height();
+    let heading_start_percentage = 0.348;
     let _ = draw_text(
         "Welcome back!",
-        Point::new(TEXT_MARGIN, 251.0),
+        Point::new(TEXT_MARGIN, height * heading_start_percentage),
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         96,
         1.0,
     );
+
+    let desc_start_percentage = 0.52;
     let _ = draw_text(
         "Please be mindful of the door opening",
-        Point::new(TEXT_MARGIN, 374.0),
+        Point::new(TEXT_MARGIN, height * desc_start_percentage),
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
@@ -91,22 +132,30 @@ fn draw_accepted_window(opacity: u8, font: &Font) {
 }
 
 fn draw_error_window(opacity: u8, font: &Font, title: &str, subtitle: &str) {
-    draw_rectangle(0.0, 140.0, screen_width(), 440.0, BLACK_BG(opacity));
-    draw_rectangle(0.0, 140.0, screen_width(), 4.0, YELLOW_ACCENT(opacity));
-    draw_rectangle(0.0, 576.0, screen_width(), 4.0, YELLOW_ACCENT(opacity));
+    let top_bottom_margin_percentage = 0.19;
+    let main_content_percentage = 1.0 - top_bottom_margin_percentage * 2.0;
+    draw_message_box(
+        opacity,
+        top_bottom_margin_percentage,
+        main_content_percentage,
+    );
 
+    let height = screen_height();
+    let heading_start_percentage = 0.248;
     let _ = draw_text(
         title,
-        Point::new(TEXT_MARGIN, 179.0),
+        Point::new(TEXT_MARGIN, height * heading_start_percentage),
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
         96,
         1.0,
     );
+
+    let desc_start_percentage = 0.55;
     let _ = draw_text(
         subtitle,
-        Point::new(TEXT_MARGIN, 398.0),
+        Point::new(TEXT_MARGIN, height * desc_start_percentage),
         screen_width() - TEXT_MARGIN,
         YELLOW_ACCENT(opacity),
         font,
