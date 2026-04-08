@@ -30,6 +30,10 @@ nfc1 = { version = "=0.7.1", default-features=false, features = [ "vendored" ], 
 [lints.clippy]
 pedantic = "deny"
 
+# Required for Sentry Source Context
+# See: https://docs.sentry.io/platforms/rust/source-context/
+[profile.release]
+debug = true
 
 [features]
 default = ["nfc_reader", "ada_pusher"]

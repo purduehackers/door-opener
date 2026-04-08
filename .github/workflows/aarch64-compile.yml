@@ -8,6 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  SENTRY_ORG: purduehackers
+  SENTRY_PROJECT: door-opener
 
 jobs:
   build:
@@ -15,10 +17,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Install system library dependencies
         run: sudo apt-get update && sudo apt-get install -y libudev-dev libnfc-dev libdbus-1-dev
       - name: Build
         run: cargo build --verbose --release
+      - name: Extract and strip debug information
+        run: |
+            objcopy --only-keep-debug target/release/openerapp{,.d}
+            objcopy --strip-debug --strip-unneeded target/release/openerapp
+            objcopy --add-gnu-debuglink target/release/openerapp{.d,}
       - name: Rename binary
         run: mv target/release/openerapp target/release/openerapp_aarch64
       - name: Make binary executable
@@ -29,3 +38,18 @@ jobs:
         with:
           files: |
             target/release/openerapp_aarch64
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        with:
+          environment: production
+          release: ${{ github.event.release.tag_name }}
+      - name: Upload debug information to Sentry
+        run: |
+            # Install sentry-cli
+            curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="3.3.5" sh
+            # Login
+            sentry-cli login --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }}
+            # Upload
+            sentry-cli debug-files upload --include-sources .
