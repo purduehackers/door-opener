@@ -1,3 +1,5 @@
+use std::vec;
+
 use macroquad::prelude::*;
 
 use super::svg;
@@ -91,11 +93,15 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
 
     update_spinner_state(state, delta_time, passport_data);
 
-    draw_texture(
+    draw_texture_ex(
         &passport_data.logo_texture,
-        passport_data.current_x - (passport_data.logo_texture.width() / 2.0),
-        passport_data.current_y - (passport_data.logo_texture.height() / 2.0),
+        passport_data.current_x - (passport_side_length / 2.0),
+        passport_data.current_y - (passport_side_length / 2.0),
         YELLOW_ACCENT(255),
+        DrawTextureParams {
+            dest_size: Some(vec2(passport_side_length, passport_side_length)),
+            ..Default::default()
+        },
     );
 
     draw_loading_spinner(loading_spinner_angle, passport_data);
@@ -157,10 +163,9 @@ fn update_spinner_state(state: AuthState, delta_time: f32, passport_data: &mut P
 }
 
 fn draw_loading_spinner(loading_spinner_angle: f32, passport_data: &PassportData) {
-    let spinner_center_x =
-        passport_data.current_x - (passport_data.loading_spinner_texture.width() / 2.0);
-    let spinner_center_y =
-        passport_data.current_y - (passport_data.loading_spinner_texture.height() / 2.0);
+    let passport_side_length = screen_width().min(screen_height());
+    let spinner_center_x = passport_data.current_x - (passport_side_length / 2.0);
+    let spinner_center_y = passport_data.current_y - (passport_side_length / 2.0);
 
     draw_texture_ex(
         &passport_data.loading_spinner_texture,
@@ -173,7 +178,7 @@ fn draw_loading_spinner(loading_spinner_angle: f32, passport_data: &PassportData
             a: passport_data.current_spinner_cutout_opacity,
         },
         DrawTextureParams {
-            dest_size: Option::None,
+            dest_size: Some(vec2(passport_side_length, passport_side_length)),
             source: Option::None,
             rotation: loading_spinner_angle,
             flip_x: true,
@@ -188,7 +193,7 @@ fn draw_loading_spinner(loading_spinner_angle: f32, passport_data: &PassportData
         spinner_center_y,
         passport_data.current_spinner_colour,
         DrawTextureParams {
-            dest_size: Option::None,
+            dest_size: Some(vec2(passport_side_length, passport_side_length)),
             source: Option::None,
             rotation: loading_spinner_angle,
             flip_x: false,
