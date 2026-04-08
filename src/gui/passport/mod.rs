@@ -69,7 +69,7 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
 
     passport_data.current_animation_time =
         f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
-    
+
     // Passport box should fit within current screen
     let passport_side_length = screen_width().min(screen_height());
     let inner_passport_side_length = passport_side_length - 20.0;
