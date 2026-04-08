@@ -83,7 +83,7 @@ fn draw_welcome_window(opacity: u8, font: &Font) {
     );
 
     let height = screen_height();
-    let heading_start_percentage = 0.28;
+    let heading_start_percentage = if screen_height() < 720.0 { 0.30 } else { 0.28 };
     let _ = draw_text(
         "Welcome to Hack Night",
         Point::new(TEXT_MARGIN, height * heading_start_percentage),
