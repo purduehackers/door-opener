@@ -1,5 +1,3 @@
-use std::vec;
-
 use macroquad::prelude::*;
 
 use super::svg;
