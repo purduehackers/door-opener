@@ -69,19 +69,23 @@ pub fn draw_passport(x: f32, y: f32, state: AuthState, passport_data: &mut Passp
 
     passport_data.current_animation_time =
         f32::clamp(passport_data.current_animation_time + delta_time, 0.0, 2.0);
+    
+    // Passport box should fit within current screen
+    let passport_side_length = screen_width().min(screen_height());
+    let inner_passport_side_length = passport_side_length - 20.0;
 
     draw_rectangle(
-        passport_data.current_x - 360.0,
-        passport_data.current_y - 360.0,
-        720.0,
-        720.0,
+        passport_data.current_x - passport_side_length / 2.0,
+        passport_data.current_y - passport_side_length / 2.0,
+        passport_side_length,
+        passport_side_length,
         YELLOW_ACCENT(255),
     );
     draw_rectangle(
-        passport_data.current_x - 350.0,
-        passport_data.current_y - 350.0,
-        700.0,
-        700.0,
+        passport_data.current_x - inner_passport_side_length / 2.0,
+        passport_data.current_y - inner_passport_side_length / 2.0,
+        inner_passport_side_length,
+        inner_passport_side_length,
         BLACK_BG(255),
     );
 
