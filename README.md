@@ -73,26 +73,7 @@ exit
 
 For the MAC address of `ada-pusher`, please consult with an organizer.
 
-Next, for the display backend, choose your poison:
-
-#### (Old, deprecated, not recommended) X11
-
-Install additional dependencies:
-
-- `xinit`
-
-From `./install/`, copy `opener-app.service` to `/etc/systemd/system`.
-Also copy `.xinitrc` to the root of the home directory (so `/home/hackers/.xinitrc`).
-Then run:
-
-```
-sudo systemctl daemon-reload
-sudo systemctl enable --now opener-app
-```
-
-#### Wayland
-
-Install additional dependencies:
+Next, install additional dependencies for the display backend:
 
 - `sway`
 - `seatd`
