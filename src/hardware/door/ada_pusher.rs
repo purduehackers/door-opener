@@ -44,7 +44,7 @@ impl AdaPusher {
         time::sleep(Duration::from_secs(5)).await;
 
         let device = Self::find_ada_pusher_device(&central)
-            .await
+            .await?
             .ok_or("ada-pusher not found during scan")?;
         println!("ada-pusher found!");
 
@@ -66,17 +66,20 @@ impl AdaPusher {
             .ok_or("failed to find command characteristic")?)
     }
 
-    async fn find_ada_pusher_device(central: &Adapter) -> Option<Peripheral> {
-        for p in central.peripherals().await.unwrap() {
-            let local_names = p.properties().await.unwrap().unwrap().local_name;
+    async fn find_ada_pusher_device(
+        central: &Adapter,
+    ) -> Result<Option<Peripheral>, Box<dyn Error + Send + Sync>> {
+        for p in central.peripherals().await? {
+            let properties = p.properties().await?;
+            let local_names = properties.ok_or("no properties found")?.local_name;
             if local_names
                 .iter()
                 .any(|name| name.contains("ada-pusher") || name.contains("nimble"))
             {
-                return Some(p);
+                return Ok(Some(p));
             }
         }
-        None
+        Ok(None)
     }
 }
 
