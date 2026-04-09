@@ -37,7 +37,7 @@ impl AdaPusher {
     async fn try_init() -> Result<Self, Box<dyn Error + Send + Sync>> {
         let manager = Manager::new().await?;
         let adapters = manager.adapters().await?;
-        let central = adapters.into_iter().nth(0).unwrap();
+        let central = adapters.into_iter().nth(0).ok_or("no adapters found")?;
 
         central.start_scan(ScanFilter::default()).await?;
         println!("Scanning for BLE devices...");
