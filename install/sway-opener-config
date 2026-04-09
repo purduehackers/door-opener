@@ -7,7 +7,7 @@ output * bg #000000 solid_color
 for_window [app_id=".*"] inhibit_idle open
 for_window [class=".*"] inhibit_idle open
 
-exec sh -c '/home/hackers/door-opener/target/release/openerapp_aarch64; swaymsg exit'
+exec sh -c '/home/hackers/door-opener/openerapp_aarch64; swaymsg exit'
 
 # Force fullscreen for any window that opens
 for_window [app_id=".*"] fullscreen enable
