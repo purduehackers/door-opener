@@ -33,7 +33,7 @@ jobs:
       - name: Make binary executable
         run: chmod +x target/release/openerapp_aarch64
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
         with:
           files: |
