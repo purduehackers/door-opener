@@ -65,7 +65,10 @@ where
                             eprintln!("Failed to capture photo: {photostring:?}");
                         }
                     }
-                    WebSocketMessage::OpenAck | WebSocketMessage::PhotoResult { .. } => {}
+                    WebSocketMessage::OpenAck | WebSocketMessage::PhotoResult { .. } => {
+                        // We send those and we should never receive them from the server
+                        unreachable!("Server sent invalid sender-only packets!");
+                    }
                 }
             }
         }
