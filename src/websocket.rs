@@ -7,11 +7,15 @@ use async_tungstenite::{
 use futures::prelude::*;
 use tokio::time::sleep;
 
+use crate::camera::capture_photo;
+
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 #[serde(tag = "type")]
 enum WebSocketMessage {
     Open,
     OpenAck,
+    CapturePhoto,
+    PhotoResult { data: String },
 }
 
 /// Websocket entry
@@ -61,7 +65,18 @@ where
                                         eprintln!("Failed to send open ack: {e:?}");
                                         }
                                     },
-                                    WebSocketMessage::OpenAck => {}
+                                    WebSocketMessage::CapturePhoto => {
+                                        let photostring = capture_photo();
+                                        if let Ok(photostring) = photostring {
+                                            let res = write.send(Message::Text(serde_json::to_string(&WebSocketMessage::PhotoResult { data: photostring }).unwrap().into())).await;
+                                            if let Err(e) = res {
+                                                eprintln!("Failed to send photo result: {e:?}");
+                                            }
+                                        } else {
+                                            eprintln!("Failed to capture photo: {photostring:?}");
+                                        }
+                                    },
+                                    WebSocketMessage::OpenAck | WebSocketMessage::PhotoResult { .. } => {}
                                 }
                             }
                         }

@@ -22,6 +22,9 @@ async-tungstenite = { version = "0.34.0", features = ["tokio-runtime", "tokio-ru
 futures = "0.3.32"
 self-replace = "1.5.0"
 sentry = "0.47.0"
+nokhwa = "0.10.10"
+base64 = "0.22.1"
+image = "0.25.10"
 
 [target.'cfg(windows)'.dependencies]
 # libnfc is not available on vcpkg, must use `vendored` feature
