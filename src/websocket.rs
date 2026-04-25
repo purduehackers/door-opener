@@ -97,7 +97,8 @@ where
                 Ok(x) => x,
                 Err(e) => {
                     eprintln!("Failed to connect to API WebSocket: {e}");
-                    return;
+                    sleep(Duration::from_secs(5)).await;
+                    continue;
                 }
             };
 
