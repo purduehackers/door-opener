@@ -7,10 +7,11 @@ use async_tungstenite::{
 use futures::prelude::*;
 use tokio::time::sleep;
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 #[serde(tag = "type")]
 enum WebSocketMessage {
     Open,
+    OpenAck,
 }
 
 /// Websocket entry
@@ -53,7 +54,14 @@ where
                         Some(Ok(Message::Text(t))) => {
                             if let Ok(msg) = serde_json::from_str(t.as_ref()) {
                                 match msg {
-                                    WebSocketMessage::Open => open(),
+                                    WebSocketMessage::Open => {
+                                        open();
+                                        let res = write.send(Message::Text(serde_json::to_string(&WebSocketMessage::OpenAck).unwrap().into())).await;
+                                        if let Err(e) = res {
+                                        eprintln!("Failed to send open ack: {e:?}");
+                                        }
+                                    },
+                                    WebSocketMessage::OpenAck => {}
                                 }
                             }
                         }
