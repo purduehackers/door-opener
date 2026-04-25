@@ -14,6 +14,8 @@ use tokio::{
     sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task,
 };
+use tracing::info;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::{enums::AuthState, gui::gui_entry, hardware::door::DoorOpener, websocket::ws_entry};
 
@@ -31,6 +33,11 @@ fn main() {
         },
     ));
 
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(sentry::integrations::tracing::layer())
+        .init();
+
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -38,7 +45,7 @@ fn main() {
         .block_on(async {
             #[cfg(not(debug_assertions))]
             if update_check().await {
-                println!("Finished updating to a newer version, closing!");
+                info!("finished updating to a newer version, closing");
                 // Quit, systemd will pick us back up
                 return;
             }
@@ -67,7 +74,7 @@ async fn opener_entry(mut opener_rx: UnboundedReceiver<()>, auth_tx: UnboundedSe
     let door_opener = DoorOpener::new(auth_tx);
     loop {
         if opener_rx.recv().await.is_some() {
-            println!("opener_entry: received open message");
+            info!("opener_entry received open message");
             door_opener.open();
         }
     }

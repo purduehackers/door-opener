@@ -9,6 +9,7 @@ use async_tungstenite::{
 use futures::prelude::*;
 
 use tokio::time::sleep;
+use tracing::{error, info, warn};
 
 use crate::camera::capture_photo;
 
@@ -43,7 +44,7 @@ where
                             ))
                             .await;
                         if let Err(e) = res {
-                            eprintln!("Failed to send open ack: {e:?}");
+                            error!(error = ?e, "failed to send open ack");
                         }
                     }
                     WebSocketMessage::CapturePhoto => {
@@ -59,10 +60,10 @@ where
                                 ))
                                 .await;
                             if let Err(e) = res {
-                                eprintln!("Failed to send photo result: {e:?}");
+                                error!(error = ?e, "failed to send photo result");
                             }
                         } else {
-                            eprintln!("Failed to capture photo: {photostring:?}");
+                            error!(error = ?photostring, "failed to capture photo");
                         }
                     }
                     WebSocketMessage::OpenAck | WebSocketMessage::PhotoResult { .. } => {
@@ -73,11 +74,11 @@ where
             }
         }
         Some(Ok(Message::Ping(_) | Message::Pong(_))) => {}
-        Some(Err(e)) => eprintln!("Received err: {e:?}"),
+        Some(Err(e)) => error!(error = ?e, "received websocket error"),
         None => {
             return Err(());
         }
-        _ => eprintln!("Unsupported message received! {msg:?}"),
+        _ => warn!(message = ?msg, "unsupported websocket message received"),
     }
     Ok(())
 }
@@ -91,16 +92,25 @@ pub async fn ws_entry<F>(mut open: F)
 where
     F: FnMut() + Send + 'static,
 {
+    let websocket_url = "wss://api.purduehackers.com/phonebell/door-opener";
+
     loop {
-        let (socket, _resp) =
-            match connect_async("wss://api.purduehackers.com/phonebell/door-opener").await {
-                Ok(x) => x,
-                Err(e) => {
-                    eprintln!("Failed to connect to API WebSocket: {e}");
-                    sleep(Duration::from_secs(5)).await;
-                    continue;
-                }
-            };
+        let (socket, _resp) = match connect_async(websocket_url).await {
+            Ok(x) => {
+                info!(url = websocket_url, "connected to websocket");
+                x
+            }
+            Err(e) => {
+                warn!(
+                    url = websocket_url,
+                    retry_in_secs = 5,
+                    error = %e,
+                    "failed to connect to API websocket; retrying"
+                );
+                sleep(Duration::from_secs(5)).await;
+                continue;
+            }
+        };
 
         let (mut write, mut read) = socket.split();
 
@@ -127,6 +137,6 @@ where
             }
         }
 
-        println!("WebSocket connection closed.");
+        warn!("websocket connection closed");
     }
 }
