@@ -1,7 +1,7 @@
 [Unit]
 Description=The Opener App that Drives the Door Opener
-After=network.target seatd.service
-Wants=seatd.service
+After=network-online.target seatd.service
+Wants=network-online.target seatd.service
 StartLimitIntervalSec=0
 
 [Service]
