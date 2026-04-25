@@ -1,4 +1,5 @@
 pub mod auth;
+mod camera;
 pub mod config;
 pub mod enums;
 pub mod gui;
@@ -7,7 +8,6 @@ pub mod timedvariable;
 #[cfg(not(debug_assertions))]
 mod updater;
 pub mod websocket;
-mod camera;
 
 use auth::auth_entry;
 use tokio::{
