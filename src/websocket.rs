@@ -1,10 +1,13 @@
 use std::{env, time::Duration};
 
+use async_tungstenite::tungstenite::Error;
 use async_tungstenite::{
-    tokio::connect_async,
+    WebSocketSender,
+    tokio::{ConnectStream, connect_async},
     tungstenite::{Bytes, Message},
 };
 use futures::prelude::*;
+
 use tokio::time::sleep;
 
 use crate::camera::capture_photo;
@@ -16,6 +19,64 @@ enum WebSocketMessage {
     OpenAck,
     CapturePhoto,
     PhotoResult { data: String },
+}
+
+async fn handle_message<F>(
+    write: &mut WebSocketSender<ConnectStream>,
+    msg: Option<Result<Message, Error>>,
+    open: &mut F,
+) -> Result<(), ()>
+where
+    F: FnMut() + Send + 'static,
+{
+    match msg {
+        Some(Ok(Message::Text(t))) => {
+            if let Ok(msg) = serde_json::from_str(t.as_ref()) {
+                match msg {
+                    WebSocketMessage::Open => {
+                        open();
+                        let res = write
+                            .send(Message::Text(
+                                serde_json::to_string(&WebSocketMessage::OpenAck)
+                                    .unwrap()
+                                    .into(),
+                            ))
+                            .await;
+                        if let Err(e) = res {
+                            eprintln!("Failed to send open ack: {e:?}");
+                        }
+                    }
+                    WebSocketMessage::CapturePhoto => {
+                        let photostring = capture_photo();
+                        if let Ok(photostring) = photostring {
+                            let res = write
+                                .send(Message::Text(
+                                    serde_json::to_string(&WebSocketMessage::PhotoResult {
+                                        data: photostring,
+                                    })
+                                    .unwrap()
+                                    .into(),
+                                ))
+                                .await;
+                            if let Err(e) = res {
+                                eprintln!("Failed to send photo result: {e:?}");
+                            }
+                        } else {
+                            eprintln!("Failed to capture photo: {photostring:?}");
+                        }
+                    }
+                    WebSocketMessage::OpenAck | WebSocketMessage::PhotoResult { .. } => {}
+                }
+            }
+        }
+        Some(Ok(Message::Ping(_) | Message::Pong(_))) => {}
+        Some(Err(e)) => eprintln!("Received err: {e:?}"),
+        None => {
+            return Err(());
+        }
+        _ => eprintln!("Unsupported message received! {msg:?}"),
+    }
+    Ok(())
 }
 
 /// Websocket entry
@@ -54,36 +115,9 @@ where
                     write.send(Message::Ping(Bytes::default())).await.expect("ping");
                 }
                 msg = read.next() => {
-                    match msg {
-                        Some(Ok(Message::Text(t))) => {
-                            if let Ok(msg) = serde_json::from_str(t.as_ref()) {
-                                match msg {
-                                    WebSocketMessage::Open => {
-                                        open();
-                                        let res = write.send(Message::Text(serde_json::to_string(&WebSocketMessage::OpenAck).unwrap().into())).await;
-                                        if let Err(e) = res {
-                                        eprintln!("Failed to send open ack: {e:?}");
-                                        }
-                                    },
-                                    WebSocketMessage::CapturePhoto => {
-                                        let photostring = capture_photo();
-                                        if let Ok(photostring) = photostring {
-                                            let res = write.send(Message::Text(serde_json::to_string(&WebSocketMessage::PhotoResult { data: photostring }).unwrap().into())).await;
-                                            if let Err(e) = res {
-                                                eprintln!("Failed to send photo result: {e:?}");
-                                            }
-                                        } else {
-                                            eprintln!("Failed to capture photo: {photostring:?}");
-                                        }
-                                    },
-                                    WebSocketMessage::OpenAck | WebSocketMessage::PhotoResult { .. } => {}
-                                }
-                            }
-                        }
-                        Some(Ok(Message::Ping(_) | Message::Pong(_))) => {}
-                        Some(Err(e)) => eprintln!("Received err: {e:?}"),
-                        None => break,
-                        _ => eprintln!("Unsupported message received! {msg:?}"),
+                    let res = handle_message(&mut write, msg, &mut open).await;
+                    if res.is_err() {
+                        break;
                     }
                 }
             }
