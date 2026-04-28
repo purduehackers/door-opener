@@ -64,7 +64,7 @@ pub fn auth_entry(gui_sender: &UnboundedSender<AuthState>, opener_tx: &Unbounded
                 let _ = gui_sender.send(NFCError);
             }
 
-            thread::sleep(Duration::from_millis(5000));
+            thread::sleep(Duration::from_secs(5));
 
             let _ = gui_sender.send(Idle);
         }
