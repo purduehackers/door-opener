@@ -7,7 +7,7 @@ edition = "2024"
 
 [dependencies]
 macroquad = "0.4.14"
-resvg = "0.47.0"
+resvg = "0.48.0"
 nfc1 = { version = "=0.7.1", default-features = false, features = [], optional = true }
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
