@@ -26,7 +26,7 @@ use updater::update_check;
 fn main() {
     let sentry_options = sentry::ClientOptions::new()
         .dsn("https://e47dea95664edd7200bbe8ba0a0c5458@o4510744753405952.ingest.us.sentry.io/4511157443362816")
-        .release(sentry::release_name!())
+        .release(sentry::release_name!().unwrap_or("unknown".into()))
         .send_default_pii(true);
     let _guard = sentry::init(sentry_options);
 
