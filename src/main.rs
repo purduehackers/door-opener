@@ -24,14 +24,11 @@ use updater::update_check;
 
 #[dotenvy::load(path = ".env", required = true, override_ = false)]
 fn main() {
-    let _guard = sentry::init((
-        "https://e47dea95664edd7200bbe8ba0a0c5458@o4510744753405952.ingest.us.sentry.io/4511157443362816",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
-            send_default_pii: true,
-            ..Default::default()
-        },
-    ));
+    let sentry_options = sentry::ClientOptions::new()
+        .dsn("https://e47dea95664edd7200bbe8ba0a0c5458@o4510744753405952.ingest.us.sentry.io/4511157443362816")
+        .release(sentry::release_name!())
+        .send_default_pii(true);
+    let _guard = sentry::init(sentry_options);
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
